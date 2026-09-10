@@ -1,0 +1,11 @@
+# ESP-IDF build output
+**/build/
+**/sdkconfig
+**/sdkconfig.old
+
+# Python
+**/__pycache__/
+**/.venv/
+
+# Local uploads
+uploads/
