@@ -40,3 +40,4 @@ typedef struct {
 } mlp_model_t;
 
 bool mlp_model_load(mlp_model_t *model);
+void mlp_model_print_info(const mlp_model_t *model);

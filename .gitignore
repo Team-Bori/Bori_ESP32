@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+build/
+managed_components/
+.vscode/
+models/generated/
