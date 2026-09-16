@@ -51,8 +51,7 @@ static bool header_is_valid(const mlp_model_header_t *h, size_t payload_size)
         return false;
     }
 
-    const size_t expected_payload =
-        expected_w1 + expected_b1 + expected_w2 + expected_b2;
+    const size_t expected_payload = expected_w1 + expected_b1 + expected_w2 + expected_b2;
 
     return payload_size == expected_payload;
 }
@@ -63,8 +62,7 @@ bool mlp_model_load(mlp_model_t *model)
         return false;
     }
 
-    const esp_partition_t *partition = esp_partition_find_first(
-        ESP_PARTITION_TYPE_DATA, 0x40, "model");
+    const esp_partition_t *partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, 0x40, "model");
 
     if (partition == NULL) {
         ESP_LOGE(TAG, "model partition not found");
@@ -77,15 +75,13 @@ bool mlp_model_load(mlp_model_t *model)
     const size_t total_size = sizeof(model->header) + payload_size;
 
     if (partition->size < total_size) {
-        ESP_LOGE(TAG, "model partition too small: %u bytes",
-                 (unsigned)partition->size);
+        ESP_LOGE(TAG, "model partition too small: %u bytes", (unsigned)partition->size);
         return false;
     }
 
     memset(model, 0, sizeof(*model));
 
-    esp_err_t err = esp_partition_read(
-        partition, 0, &model->header, sizeof(model->header));
+    esp_err_t err = esp_partition_read(partition, 0, &model->header, sizeof(model->header));
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "header read failed: %s", esp_err_to_name(err));
         return false;
@@ -97,8 +93,7 @@ bool mlp_model_load(mlp_model_t *model)
     }
 
     uint8_t *payload = (uint8_t *)model->w1;
-    err = esp_partition_read(
-        partition, sizeof(model->header), payload, payload_size);
+    err = esp_partition_read(partition, sizeof(model->header), payload, payload_size);
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "payload read failed: %s", esp_err_to_name(err));
         return false;
@@ -109,12 +104,15 @@ bool mlp_model_load(mlp_model_t *model)
         ESP_LOGE(TAG,
                  "checksum mismatch: expected=0x%08" PRIx32
                  " actual=0x%08" PRIx32,
-                 model->header.checksum, checksum);
+                 model->header.checksum, checksum
+        );
         return false;
     }
 
     ESP_LOGI(TAG, "model loaded: total=%u payload=%u checksum=0x%08" PRIx32,
-             (unsigned)total_size, (unsigned)payload_size, checksum);
+             (unsigned)total_size, 
+             (unsigned)payload_size, checksum
+    );
 
     return true;
 }

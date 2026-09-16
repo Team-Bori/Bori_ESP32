@@ -3,13 +3,6 @@
 #include <limits.h>
 #include <math.h>
 
-/*
- * Fixed-point requantization helper.
- *
- * We keep model scales as float metadata, but the inference path below uses
- * integer math only after the model is loaded. The conversion multiplier is
- * computed once for the first layer and represented as Q31.
- */
 static int32_t make_q31_multiplier(float real_multiplier, int *shift)
 {
     if (real_multiplier <= 0.0f) {
@@ -18,7 +11,7 @@ static int32_t make_q31_multiplier(float real_multiplier, int *shift)
     }
 
     int exp = 0;
-    float normalized = frexpf(real_multiplier, &exp); /* 0.5 <= n < 1.0 */
+    float normalized = frexpf(real_multiplier, &exp); // 0.5 <= n < 1.0
     int64_t q31 = (int64_t)llroundf(normalized * 2147483648.0f);
 
     if (q31 >= 2147483648LL) {
@@ -27,9 +20,7 @@ static int32_t make_q31_multiplier(float real_multiplier, int *shift)
     }
 
     *shift = 31 - exp;
-    if (*shift < 0) {
-        *shift = 0;
-    }
+    if (*shift < 0) *shift = 0;
     return (int32_t)q31;
 }
 
@@ -51,45 +42,32 @@ static int32_t requantize(int32_t acc, int32_t multiplier, int shift)
     return (int32_t)product;
 }
 
-int mlp_predict(const mlp_model_t *model, const int8_t input[MLP_INPUT_SIZE],
-                int32_t logits[MLP_OUTPUT_SIZE])
+int mlp_predict(const mlp_model_t *model, const int8_t input[MLP_INPUT_SIZE], int32_t logits[MLP_OUTPUT_SIZE])
 {
     int8_t hidden_q[MLP_HIDDEN_SIZE];
 
-    const float hidden_requant_scale =
-        (model->header.input_scale * model->header.w1_scale) /
-        model->header.hidden_scale;
+    const float hidden_requant_scale = (model->header.input_scale * model->header.w1_scale) / model->header.hidden_scale;
 
     int hidden_shift = 0;
-    const int32_t hidden_multiplier =
-        make_q31_multiplier(hidden_requant_scale, &hidden_shift);
+    const int32_t hidden_multiplier = make_q31_multiplier(hidden_requant_scale, &hidden_shift);
 
-    /* Layer 1: 64 -> 16, INT8 x INT8 -> INT32, then integer requantization. */
+    // Layer 1: 64 -> 16, INT8 x INT8 -> INT32
     for (int h = 0; h < MLP_HIDDEN_SIZE; ++h) {
         int32_t acc = model->b1[h];
 
         for (int i = 0; i < MLP_INPUT_SIZE; ++i) {
-            acc += (int32_t)input[i] *
-                   (int32_t)model->w1[i * MLP_HIDDEN_SIZE + h];
+            acc += (int32_t)input[i] * (int32_t)model->w1[i * MLP_HIDDEN_SIZE + h];
         }
 
         int32_t q = requantize(acc, hidden_multiplier, hidden_shift);
 
-        /* ReLU + int8 activation range. */
-        if (q <= 0) {
-            hidden_q[h] = 0;
-        } else if (q > 127) {
-            hidden_q[h] = 127;
-        } else {
-            hidden_q[h] = (int8_t)q;
-        }
+        // ReLU + int8 activation range
+        if (q <= 0) hidden_q[h] = 0;
+        else if (q > 127) hidden_q[h] = 127;
+        else hidden_q[h] = (int8_t)q;
     }
 
-    /*
-     * Layer 2: 16 -> 10.
-     * Argmax does not require output dequantization because every output uses
-     * the same positive scale.
-     */
+    // Layer 2: 16 -> 10
     int best = 0;
     int32_t best_value = INT32_MIN;
 
