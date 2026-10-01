@@ -62,10 +62,13 @@ bool mlp_model_load(mlp_model_t *model)
         return false;
     }
 
-    const esp_partition_t *partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, 0x40, "model");
+    const esp_partition_t *partition = esp_partition_find_first(
+        ESP_PARTITION_TYPE_DATA, 0x40, "model");
 
     if (partition == NULL) {
-        ESP_LOGE(TAG, "model partition not found");
+        ESP_LOGE(TAG,
+                 "model partition not found; flash model.bin at 0x1E0000 "
+                 "after flashing the firmware");
         return false;
     }
 
@@ -79,6 +82,9 @@ bool mlp_model_load(mlp_model_t *model)
         return false;
     }
 
+    ESP_LOGI(TAG, "model partition: address=0x%" PRIx32 " size=%u",
+             partition->address, (unsigned)partition->size);
+
     memset(model, 0, sizeof(*model));
 
     esp_err_t err = esp_partition_read(partition, 0, &model->header, sizeof(model->header));
@@ -88,7 +94,18 @@ bool mlp_model_load(mlp_model_t *model)
     }
 
     if (!header_is_valid(&model->header, payload_size)) {
-        ESP_LOGE(TAG, "invalid model header");
+        ESP_LOGE(TAG,
+                 "invalid model header: magic=%.4s version=%" PRIu32
+                 " dims=%u-%u-%u payload=%" PRIu32 "+%" PRIu32 "+%" PRIu32 "+%" PRIu32,
+                 model->header.magic,
+                 model->header.version,
+                 model->header.input_size,
+                 model->header.hidden_size,
+                 model->header.output_size,
+                 model->header.w1_bytes,
+                 model->header.b1_bytes,
+                 model->header.w2_bytes,
+                 model->header.b2_bytes);
         return false;
     }
 
