@@ -3,31 +3,29 @@ set -euo pipefail
 
 if [[ $# -ne 2 ]]; then
   echo "Usage: $0 <serial_port> <model_url>"
-  echo "Example: $0 /dev/ttyUSB0 https://raw.githubusercontent.com/USER/REPO/main/models/mlp/default_model.bin"
+  echo "Example: $0 /dev/ttyUSB0 https://github.com/USER/REPO/blob/main/models/mlp/default_model.bin"
+  echo "GitHub file links (github.com/.../blob/...) are converted to raw links automatically."
   exit 1
 fi
+
+source "$(dirname "$0")/common.sh"
 
 PORT="$1"
 URL="$2"
 OUT="/tmp/mlp_model.bin"
-MODEL_OFFSET="0x1E0000"
 
-command -v curl >/dev/null || { echo "curl is required"; exit 1; }
-command -v esptool >/dev/null || { echo "esptool is required"; exit 1; }
-command -v python3 >/dev/null || { echo "python3 is required"; exit 1; }
+load_config
+require_tools curl python3
+find_esptool
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-
-curl -fL --retry 3 "$URL" -o "$OUT"
+download "$URL" "$OUT" "$MAX_MODEL_BYTES"
+check_size "$OUT" "$MAX_MODEL_BYTES" "Model"
 
 echo "Validating downloaded model..."
-python3 "$PROJECT_ROOT/pc/validate_model.py" "$OUT"
+CHECKSUM="$(validate_model "$OUT")" || exit 1
 
-echo "Downloaded model: $(stat -c%s "$OUT") bytes"
 echo "Flashing model partition at $MODEL_OFFSET ..."
+flash_image "$PORT" "$MODEL_OFFSET" "$OUT"
 
-esptool --chip esp32 -p "$PORT" -b 921600 \
-  write-flash --flash-mode dio --flash-size detect "$MODEL_OFFSET" "$OUT"
-
-echo "Model flash complete. Reboot the ESP32 and run the benchmark."
+verify_boot "$PORT" --expect-checksum "$CHECKSUM"
+echo "Model deploy complete (checksum $CHECKSUM)."

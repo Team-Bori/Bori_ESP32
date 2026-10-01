@@ -7,21 +7,22 @@ if [[ $# -ne 2 ]]; then
   exit 1
 fi
 
+source "$(dirname "$0")/common.sh"
+
 PORT="$1"
 MODEL="$2"
-MODEL_OFFSET="0x1E0000"
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-command -v python3 >/dev/null || { echo "python3 is required"; exit 1; }
-command -v esptool >/dev/null || { echo "esptool is required"; exit 1; }
+load_config
+require_tools python3
+find_esptool
 
-[[ -f "$MODEL" ]] || { echo "Model file not found: $MODEL"; exit 1; }
+[[ -f "$MODEL" ]] || die "Model file not found: $MODEL"
+check_size "$MODEL" "$MAX_MODEL_BYTES" "Model"
 
-python3 "$PROJECT_ROOT/pc/validate_model.py" "$MODEL"
+CHECKSUM="$(validate_model "$MODEL")" || exit 1
 
 echo "Flashing validated model to $PORT at $MODEL_OFFSET ..."
-esptool --chip esp32 -p "$PORT" -b 921600 \
-  write-flash --flash-mode dio --flash-size detect "$MODEL_OFFSET" "$MODEL"
+flash_image "$PORT" "$MODEL_OFFSET" "$MODEL"
 
-echo "Model flash complete."
+verify_boot "$PORT" --expect-checksum "$CHECKSUM"
+echo "Model deploy complete (checksum $CHECKSUM)."
