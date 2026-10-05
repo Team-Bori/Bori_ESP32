@@ -1,0 +1,17 @@
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+CONFIG_PARTITION_TABLE_OFFSET=0x8000
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+
+# 240 MHz: inference latency is the main metric of this service and the boards are
+# USB powered, so power saving does not matter. (mlp_esp32 stays at 160 MHz;
+# info.board.cpu_freq_mhz reports the clock with every measurement.)
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_240=y
+
+# -O2 for the application. The TFLM component builds itself with -O3.
+# Do not modify ESP-IDF tools/ldgen/ldgen.py (see mlp_esp32/sdkconfig.defaults).
+# Check after building: xtensa-esp32-elf-nm build/tflm_runtime.elf | grep esp_cpu_compare_and_set -> 0x4008xxxx
+CONFIG_COMPILER_OPTIMIZATION_PERF=y
+
+# TFLM Invoke() + JSON printing run in the main task. stack_free in every message shows the margin.
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=10240
