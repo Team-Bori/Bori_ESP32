@@ -15,4 +15,5 @@ if [[ -f ../../firmware/model.bin ]]; then
 fi
 
 echo "Firmware release created: ../../firmware/mlp.bin"
-echo "Model image: ../../firmware/model.bin (flash at 0x1E0000)."
+python ../../pc/validate_firmware.py ../../firmware/mlp.bin
+echo "Model image: ../../firmware/model.bin (flash at 0x200000)."

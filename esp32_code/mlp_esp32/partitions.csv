@@ -1,5 +1,7 @@
 # Name,     Type, SubType, Offset,   Size,     Flags
+# 4MB flash: app and model share the flash. Keep identical to esp32_code/tflm_runtime/partitions.csv
+# and rpi/common.sh (MODEL_OFFSET, MODEL_PARTITION_BYTES, FIRMWARE_LIMIT_BYTES).
 nvs,        data, nvs,     0x9000,   0x6000,
 phy_init,   data, phy,     0xF000,   0x1000,
-factory,    app,  factory, 0x10000,  0x1D0000,
-model,      data, 0x40,    0x1E0000, 0x20000,
+factory,    app,  factory, 0x10000,  0x1F0000,
+model,      data, 0x40,    0x200000, 0x200000,

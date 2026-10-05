@@ -67,7 +67,7 @@ bool mlp_model_load(mlp_model_t *model)
 
     if (partition == NULL) {
         ESP_LOGE(TAG,
-                 "model partition not found; flash model.bin at 0x1E0000 "
+                 "model partition not found; flash model.bin at 0x200000 "
                  "after flashing the firmware");
         return false;
     }

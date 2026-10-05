@@ -6,15 +6,13 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#include "esp_app_desc.h"
-#include "esp_chip_info.h"
-#include "esp_flash.h"
 #include "esp_heap_caps.h"
 #include "esp_log.h"
 #include "esp_partition.h"
 #include "esp_system.h"
 #include "esp_timer.h"
 
+#include "bori_common.h"
 #include "mlp.h"
 #include "model.h"
 
@@ -28,6 +26,7 @@
  * to WARN to silence them.
  */
 #define PROTOCOL_VERSION 1
+#define FIRMWARE_ID "mlp"
 #define MODEL_ID "mlp_64_16_10_int8"
 #define BENCH_ITERATIONS 1000
 #define METRICS_INTERVAL_MS 5000
@@ -52,105 +51,29 @@ static const int8_t DEMO_INPUT[MLP_INPUT_SIZE] = {
 
 static const int DEMO_LABEL = 5;
 
-static const char *reset_reason_name(esp_reset_reason_t reason)
-{
-    switch (reason) {
-    case ESP_RST_POWERON:   return "poweron";
-    case ESP_RST_EXT:       return "external";
-    case ESP_RST_SW:        return "software";
-    case ESP_RST_PANIC:     return "panic";
-    case ESP_RST_INT_WDT:   return "int_wdt";
-    case ESP_RST_TASK_WDT:  return "task_wdt";
-    case ESP_RST_WDT:       return "wdt";
-    case ESP_RST_DEEPSLEEP: return "deepsleep";
-    case ESP_RST_BROWNOUT:  return "brownout";
-    case ESP_RST_SDIO:      return "sdio";
-    default:                return "unknown";
-    }
-}
-
-static bool reset_reason_is_fault(esp_reset_reason_t reason)
-{
-    return reason == ESP_RST_PANIC || reason == ESP_RST_INT_WDT ||
-           reason == ESP_RST_TASK_WDT || reason == ESP_RST_WDT ||
-           reason == ESP_RST_BROWNOUT;
-}
-
-static void print_memory_fields(void)
-{
-    printf("\"memory\":{\"heap_free\":%u,\"heap_min_free\":%u,\"heap_total\":%u,"
-           "\"internal_free\":%u,\"stack_free\":%u}",
-           (unsigned)esp_get_free_heap_size(),
-           (unsigned)esp_get_minimum_free_heap_size(),
-           (unsigned)heap_caps_get_total_size(MALLOC_CAP_DEFAULT),
-           (unsigned)heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
-           (unsigned)(uxTaskGetStackHighWaterMark(NULL) * sizeof(StackType_t)));
-}
-
 static void log_memory(void)
 {
-    ESP_LOGI(TAG, "  memory : heap free %u / total %u bytes (min free %u), internal free %u, stack free %u",
-             (unsigned)esp_get_free_heap_size(),
-             (unsigned)heap_caps_get_total_size(MALLOC_CAP_DEFAULT),
-             (unsigned)esp_get_minimum_free_heap_size(),
-             (unsigned)heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
-             (unsigned)(uxTaskGetStackHighWaterMark(NULL) * sizeof(StackType_t)));
+    bori_log_memory(TAG);
 }
 
 static void print_error(const char *code, const char *message)
 {
-    printf("{\"type\":\"error\",\"code\":\"%s\",\"message\":\"%s\"}\n", code, message);
-    fflush(stdout);
-
-    ESP_LOGE(TAG, "[error] %s: %s", code, message);
+    bori_print_error(TAG, code, message);
 }
 
 static void print_boot(void)
 {
-    const esp_app_desc_t *app = esp_app_get_description();
-    const esp_reset_reason_t reason = esp_reset_reason();
-
-    printf("{\"type\":\"boot\",\"proto\":%d,\"fw_version\":\"%s\",\"idf_version\":\"%s\","
-           "\"reset_reason\":\"%s\",\"fault_reset\":%s}\n",
-           PROTOCOL_VERSION, app->version, app->idf_ver,
-           reset_reason_name(reason),
-           reset_reason_is_fault(reason) ? "true" : "false");
-    fflush(stdout);
-
-    ESP_LOGI(TAG, "[boot] protocol v%d, firmware %s, ESP-IDF %s",
-             PROTOCOL_VERSION, app->version, app->idf_ver);
-    if (reset_reason_is_fault(reason)) {
-        ESP_LOGW(TAG, "  reset reason: %s (previous run crashed)", reset_reason_name(reason));
-    } else {
-        ESP_LOGI(TAG, "  reset reason: %s", reset_reason_name(reason));
-    }
+    bori_print_boot(TAG, PROTOCOL_VERSION, FIRMWARE_ID);
 }
 
 static void print_info(void)
 {
-    esp_chip_info_t chip;
-    esp_chip_info(&chip);
-
-    uint32_t flash_size = 0;
-    if (esp_flash_get_size(NULL, &flash_size) != ESP_OK) {
-        flash_size = 0;
-    }
-
-    const esp_app_desc_t *app = esp_app_get_description();
     const esp_partition_t *part = esp_partition_find_first(
-        ESP_PARTITION_TYPE_DATA, 0x40, "model");
+        ESP_PARTITION_TYPE_DATA, BORI_MODEL_PARTITION_SUBTYPE, BORI_MODEL_PARTITION_LABEL);
 
-    printf("{\"type\":\"info\",\"proto\":%d,", PROTOCOL_VERSION);
-
-    printf("\"board\":{\"chip\":\"ESP32\",\"cores\":%d,\"revision\":%d,"
-           "\"cpu_freq_mhz\":%d,\"flash_bytes\":%" PRIu32 ",\"psram_bytes\":%u,"
-           "\"wifi\":%s,\"bt\":%s,\"ai_accelerator\":false,"
-           "\"fw_version\":\"%s\",\"idf_version\":\"%s\"},",
-           chip.cores, chip.revision, CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ, flash_size,
-           (unsigned)heap_caps_get_total_size(MALLOC_CAP_SPIRAM),
-           (chip.features & CHIP_FEATURE_WIFI_BGN) ? "true" : "false",
-           (chip.features & (CHIP_FEATURE_BT | CHIP_FEATURE_BLE)) ? "true" : "false",
-           app->version, app->idf_ver);
+    printf("{\"type\":\"info\",\"proto\":%d,\"firmware_id\":\"%s\",", PROTOCOL_VERSION, FIRMWARE_ID);
+    bori_print_board_fields();
+    printf(",");
 
     printf("\"supported_models\":[\"%s\"],", MODEL_ID);
 
@@ -171,15 +94,11 @@ static void print_info(void)
     }
     printf("},");
 
-    print_memory_fields();
+    bori_print_memory_fields();
     printf("}\n");
     fflush(stdout);
 
-    ESP_LOGI(TAG, "[info] ESP32 rev %d.%d, %d cores @ %d MHz, flash %" PRIu32 " KB, PSRAM %u KB, AI accelerator: no",
-             chip.revision / 100, chip.revision % 100, chip.cores,
-             CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ, flash_size / 1024,
-             (unsigned)(heap_caps_get_total_size(MALLOC_CAP_SPIRAM) / 1024));
-    ESP_LOGI(TAG, "  firmware: %s (ESP-IDF %s)", app->version, app->idf_ver);
+    bori_log_board(TAG);
     if (g_model_loaded) {
         ESP_LOGI(TAG, "  model  : %s (%d-%d-%d, int8) loaded, checksum 0x%08" PRIx32,
                  MODEL_ID, MLP_INPUT_SIZE, MLP_HIDDEN_SIZE, MLP_OUTPUT_SIZE,
@@ -213,7 +132,7 @@ static void run_inference(void)
         printf(i == 0 ? "%" PRId32 : ",%" PRId32, logits[i]);
     }
     printf("],");
-    print_memory_fields();
+    bori_print_memory_fields();
     printf("}\n");
     fflush(stdout);
 
@@ -259,7 +178,7 @@ static void run_benchmark(void)
            "\"avg_us\":%.3f,\"fps\":%.3f,\"heap_before\":%u,\"heap_after\":%u,",
            BENCH_ITERATIONS, total_us, avg_us, 1000000.0 / avg_us,
            (unsigned)heap_before, (unsigned)heap_after);
-    print_memory_fields();
+    bori_print_memory_fields();
     printf("}\n");
     fflush(stdout);
 
@@ -287,14 +206,14 @@ static void report_metrics(void)
 
         printf("\"iterations\":%d,\"avg_us\":%.3f,\"fps\":%.3f,",
                METRICS_ITERATIONS, avg_us, 1000000.0 / avg_us);
-        print_memory_fields();
+        bori_print_memory_fields();
         printf("}\n");
         fflush(stdout);
 
         ESP_LOGI(TAG, "[metrics #%" PRIu32 "] uptime %" PRId64 " s, avg %.3f us, %.1f FPS (%d runs)",
                  seq, uptime_ms / 1000, avg_us, 1000000.0 / avg_us, METRICS_ITERATIONS);
     } else {
-        print_memory_fields();
+        bori_print_memory_fields();
         printf("}\n");
         fflush(stdout);
 
@@ -324,7 +243,7 @@ void app_main(void)
     if (!g_model_loaded) {
         // Stay responsive so the host can still query status via 'm'.
         print_error("model_load_failed",
-                    "flash a valid model.bin to the model partition (0x1E0000)");
+                    "flash a valid model.bin to the model partition (0x200000)");
     }
 
     printf("{\"type\":\"ready\",\"model_loaded\":%s,\"commands\":\"i,b,m,p\","
