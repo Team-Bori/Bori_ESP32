@@ -1,1 +1,3 @@
 pyserial
+# run-test (test files are .npz/.npy)
+numpy
