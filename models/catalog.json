@@ -96,6 +96,148 @@
       "package_path": "models/cnn_mnist_int8/default_model.bin"
     },
     {
+      "model_id": "har_imu_int8",
+      "name": "Human activity recognition 1D CNN (int8)",
+      "description": "스마트폰 IMU 원시 신호 2.56초 창(50Hz × 128, 9채널)으로 걷기·계단 오르기·계단 내려가기·앉기·서기·눕기 6가지 동작 분류. 센서 시계열 대표 모델.",
+      "task": "classification",
+      "firmware": "tflm_runtime",
+      "package_format": "BTF1",
+      "input": {
+        "shape": [
+          1,
+          128,
+          9
+        ],
+        "dtype": "int8",
+        "scale": 0.08275828510522842,
+        "zero_point": 7,
+        "bytes": 1152
+      },
+      "output": {
+        "shape": [
+          1,
+          6
+        ],
+        "dtype": "int8",
+        "scale": 0.00390625,
+        "zero_point": -128,
+        "bytes": 6
+      },
+      "package": {
+        "size_bytes": 185400,
+        "checksum": "0x02621d69",
+        "sha256": "520363594d193fbd644d3f3f7c39fa3f3f591c29dbb86e032fb4b620526bbe21",
+        "tflite_bytes": 10520,
+        "arena_bytes": 0,
+        "eval_samples": 150,
+        "demo": true
+      },
+      "source": {
+        "model": "trained in this repository",
+        "train": "pc/models/har_imu/train.py",
+        "license": "repository license (model weights); see dataset for the samples"
+      },
+      "dataset": {
+        "name": "Human Activity Recognition Using Smartphones (UCI)",
+        "url": "https://archive.ics.uci.edu/dataset/240/human+activity+recognition+using+smartphones",
+        "download": "https://archive.ics.uci.edu/static/public/240/human+activity+recognition+using+smartphones.zip",
+        "zip_sha256": "c00b803081a5c797cd5e4b83700a9810b38d53d9d84e01917e090e1fdbc81031",
+        "version": "donated 2012-12-09, DOI 10.24432/C54S4K",
+        "split": "official train (21 subjects) / test (9 subjects), subjects disjoint",
+        "license": "CC BY 4.0",
+        "citation": "D. Anguita, A. Ghio, L. Oneto, X. Parra, J. L. Reyes-Ortiz. A Public Domain Dataset for Human Activity Recognition Using Smartphones. ESANN 2013."
+      },
+      "host": {
+        "arena_bytes_estimate": 7120,
+        "check_tool": "tflite-micro (pip, TFLM reference kernels, x86_64)",
+        "eval_samples": 150,
+        "eval_accuracy_int8": 0.9267,
+        "float_test_accuracy": 0.9203,
+        "int8_test_accuracy": 0.9182,
+        "test_windows": 2947,
+        "int8_reference": "TF Lite interpreter, full test split",
+        "confusion_int8": [
+          [
+            492,
+            0,
+            4,
+            0,
+            0,
+            0
+          ],
+          [
+            13,
+            435,
+            23,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            13,
+            406,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            7,
+            0,
+            398,
+            86,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            91,
+            441,
+            0
+          ],
+          [
+            0,
+            3,
+            0,
+            0,
+            0,
+            534
+          ]
+        ]
+      },
+      "board": {
+        "measured_at": "2026-10-06",
+        "firmware": "tflm_runtime b2a7e8c",
+        "cpu_freq_mhz": 240,
+        "latency_us": {
+          "bench_avg": 16423.3,
+          "bench_min": 16415,
+          "bench_max": 16430,
+          "bench_iterations": 122,
+          "eval_avg": 16512.8,
+          "stream_avg": 17059.1,
+          "demo_single": 17089
+        },
+        "arena_used_bytes": 5932,
+        "max_arena_bytes": 155648,
+        "eval_samples": 150,
+        "eval_accuracy": 0.9267,
+        "eval_wall_ms": 2544,
+        "stream_test": {
+          "samples": 150,
+          "accuracy": 0.9267,
+          "baud": 921600,
+          "wall_s": 5.282,
+          "transport_retries": 0
+        },
+        "heap_free_loaded": 132616,
+        "stack_free": 7952
+      },
+      "package_path": "models/har_imu_int8/default_model.bin"
+    },
+    {
       "model_id": "mlp_64_16_10_int8",
       "name": "Digit MLP 64-16-10 (int8)",
       "description": "8x8 handwritten digit classifier (scikit-learn digits), hand-written int8 kernel. Runs on the mlp firmware only.",

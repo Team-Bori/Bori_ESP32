@@ -1,0 +1,4 @@
+# Training for models/har_imu_int8 (pc/models/har_imu/train.py).
+# Packaging/validation needs pc/requirements.txt as well.
+tensorflow>=2.16
+numpy
