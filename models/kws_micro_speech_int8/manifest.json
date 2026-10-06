@@ -1,0 +1,158 @@
+{
+  "model_id": "kws_micro_speech_int8",
+  "name": "Keyword spotting yes/no (TFLM micro_speech, int8)",
+  "description": "1초 음성의 스펙트로그램 특징(49 프레임 × 40 채널)으로 silence / unknown / yes / no를 분류. 오디오 계열 대표 모델. 음성→특징 변환은 호스트에서 한다.",
+  "task": "classification",
+  "firmware": "tflm_runtime",
+  "package_format": "BTF1",
+  "files": {
+    "tflite": "model.tflite",
+    "package": "default_model.bin"
+  },
+  "build": {
+    "arena_bytes": 0,
+    "labels": [
+      "silence",
+      "unknown",
+      "yes",
+      "no"
+    ],
+    "demo_input": "samples/demo_input.npy",
+    "demo_expected": "samples/demo_expected.npy",
+    "eval_inputs": "samples/eval_inputs.npy",
+    "eval_expected": "samples/eval_expected.npy"
+  },
+  "preprocessing": {
+    "where": "host (PC / server); the board has no microphone",
+    "method": "original example audio_preprocessor_int8.tflite (Signal library: Hann window, FFT, 40-band filter bank, spectral subtraction, PCAN, log), run frame by frame on the TFLM interpreter",
+    "audio": "16 kHz mono int16, 1 s (16,000 samples)",
+    "frames": "30 ms window (480 samples), 20 ms stride (320 samples) -> 49 frames x 40 int8, state reset per clip",
+    "model_input": "49 x 40 int8 flattened to [1, 1960]; the preprocessor output is already in the model input quantization (scale 0.1017157, zero_point -128)",
+    "verified": "bit-exact with micro_speech_test.cc NoFeatureTest/YesFeatureTest; yes/no/silence/noise 1 s test clips give the expected labels",
+    "script": "pc/models/kws_micro_speech/features.py"
+  },
+  "source": {
+    "url": "https://github.com/tensorflow/tflite-micro/tree/22c2469a233981012ac16ad849f59c7105655aa9/tensorflow/lite/micro/examples/micro_speech",
+    "file": "models/micro_speech_quantized.tflite (unchanged)",
+    "commit": "22c2469a233981012ac16ad849f59c7105655aa9",
+    "sha256": "09e5e2a9dfb2d8ed78802bf18ce297bff54281a66ca18e0c23d69ca14f822a83",
+    "preprocessor_sha256": "278949d197166fb8b580c0bdc94e902fb709fec0569dcf5766816b28285440e5",
+    "license": "Apache-2.0 (Copyright The TensorFlow Authors)",
+    "prepare": "pc/models/kws_micro_speech/prepare.py"
+  },
+  "dataset": {
+    "name": "Speech Commands v0.02 test set",
+    "url": "https://storage.googleapis.com/download.tensorflow.org/data/speech_commands_test_set_v0.02.tar.gz",
+    "sha256": "cc2a00c1147c2254e9be3fa0f779d8c17421dc349b86366567a8edfa9acd51df",
+    "license": "CC BY 4.0",
+    "citation": "P. Warden. Speech Commands: A Dataset for Limited-Vocabulary Speech Recognition. arXiv:1804.03209, 2018.",
+    "category_mapping": "_silence_ -> silence, yes -> yes, no -> no, _unknown_ + down/go/left/off/on/right/stop/up -> unknown",
+    "notes": "package eval samples and test_data.npz are features computed from these clips (derived data, CC BY 4.0)"
+  },
+  "host": {
+    "arena_bytes_estimate": 7568,
+    "check_tool": "tflite-micro (pip, TFLM reference kernels, x86_64)",
+    "eval_samples": 160,
+    "eval_accuracy_int8": 0.8938,
+    "test_clips": 4890,
+    "int8_accuracy": 0.7808,
+    "balanced_accuracy": 0.8932,
+    "per_class_recall": {
+      "silence": 0.9828,
+      "unknown": 0.7239,
+      "yes": 0.9523,
+      "no": 0.9136
+    },
+    "confusion_int8": [
+      [
+        401,
+        5,
+        2,
+        0
+      ],
+      [
+        27,
+        2648,
+        323,
+        660
+      ],
+      [
+        3,
+        9,
+        399,
+        8
+      ],
+      [
+        2,
+        31,
+        2,
+        370
+      ]
+    ],
+    "int8_reference": "TFLM interpreter (pip tflite-micro), full Speech Commands v0.02 test set",
+    "weighted_accuracy_2_2_1_1": 0.9064
+  },
+  "board": {
+    "measured_at": "2026-10-06",
+    "firmware": "tflm_runtime b2a7e8c",
+    "cpu_freq_mhz": 240,
+    "latency_us": {
+      "bench_avg": 12967.2,
+      "bench_min": 12963,
+      "bench_max": 12991,
+      "bench_iterations": 153,
+      "eval_avg": 13221.0,
+      "stream_avg": 13983.6,
+      "stream_min": 13925,
+      "stream_max": 14495,
+      "demo_single": 14179
+    },
+    "arena_used_bytes": 6812,
+    "max_arena_bytes": 155648,
+    "eval_samples": 160,
+    "eval_accuracy": 0.8938,
+    "eval_wall_ms": 2200,
+    "stream_test": {
+      "samples": 160,
+      "accuracy": 0.8938,
+      "baud": 921600,
+      "wall_s": 6.578,
+      "transport_retries": 0
+    }
+  },
+  "input": {
+    "shape": [
+      1,
+      1960
+    ],
+    "dtype": "int8",
+    "scale": 0.10171568393707275,
+    "zero_point": -128,
+    "bytes": 1960
+  },
+  "output": {
+    "shape": [
+      1,
+      4
+    ],
+    "dtype": "int8",
+    "scale": 0.00390625,
+    "zero_point": -128,
+    "bytes": 4
+  },
+  "ops": [
+    "DEPTHWISE_CONV_2D",
+    "FULLY_CONNECTED",
+    "RESHAPE",
+    "SOFTMAX"
+  ],
+  "package": {
+    "size_bytes": 335284,
+    "checksum": "0x94138a96",
+    "sha256": "3dc10aba20bbd2bcf1eb7c90898ca90c89f52aeb242ae533351fda01caa9a791",
+    "tflite_bytes": 18800,
+    "arena_bytes": 0,
+    "eval_samples": 160,
+    "demo": true
+  }
+}
