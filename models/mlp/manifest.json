@@ -35,8 +35,8 @@
   },
   "host": {},
   "board": {
-    "measured_at": "2026-10-05",
-    "firmware": "mlp 66a9038-dirty (partition model 0x200000)",
+    "measured_at": "2026-10-06",
+    "firmware": "mlp b2a7e8c (firmware/mlp.bin, model partition 0x200000)",
     "cpu_freq_mhz": 160,
     "latency_us": {
       "bench_avg": 103.1,

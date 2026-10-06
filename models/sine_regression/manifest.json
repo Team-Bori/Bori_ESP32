@@ -70,8 +70,8 @@
     "eval_max_abs_err": 0.100464
   },
   "board": {
-    "measured_at": "2026-10-05",
-    "firmware": "tflm_runtime 66a9038-dirty (2nd build 2026-10-05: test_summary seq, info 1KB limit)",
+    "measured_at": "2026-10-06",
+    "firmware": "tflm_runtime b2a7e8c (firmware/tflm_runtime.bin)",
     "cpu_freq_mhz": 240,
     "latency_us": {
       "bench_avg": 41.7,

@@ -38,7 +38,7 @@ TensorFlow Lite Micro 공식 예제 **hello_world**의 int8 모델(사인파 회
 
 ## 결과
 
-보드: ESP32 rev 3.1, 240 MHz, tflm_runtime 66a9038-dirty, 2026-10-05 실측.
+보드: ESP32 rev 3.1, 240 MHz, 2026-10-06 tflm_runtime b2a7e8c(`firmware/tflm_runtime.bin`)로 재확인.
 지연 시간은 같은 날 두 번째 빌드(test_summary seq, info 1KB 수정) 값이다. 첫 빌드에서는 `b` 평균 53.5 µs, 스트리밍 160.5 µs로,
 이 정도로 작은 모델은 코드 배치에 따라 20% 안팎 달라진다. 정확도·아레나는 두 빌드가 같았다.
 
