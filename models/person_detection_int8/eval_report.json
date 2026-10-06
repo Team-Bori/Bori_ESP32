@@ -1,0 +1,57 @@
+{
+  "host_eval_images": 2000,
+  "host_person": 930,
+  "pillow": "12.2.0",
+  "tflm_commit": "22c2469a233981012ac16ad849f59c7105655aa9",
+  "host_resize": {
+    "accuracy": 0.776,
+    "recall_no_person": 0.7879,
+    "recall_person": 0.7624,
+    "confusion": [
+      [
+        843,
+        227
+      ],
+      [
+        221,
+        709
+      ]
+    ]
+  },
+  "host_center_crop_0.875": {
+    "accuracy": 0.7835,
+    "recall_no_person": 0.7841,
+    "recall_person": 0.7828,
+    "confusion": [
+      [
+        839,
+        231
+      ],
+      [
+        202,
+        728
+      ]
+    ]
+  },
+  "package": {
+    "eval_samples": 60,
+    "accuracy": 0.8667,
+    "recall_no_person": 0.8333,
+    "recall_person": 0.9,
+    "confusion": [
+      [
+        25,
+        5
+      ],
+      [
+        3,
+        27
+      ]
+    ],
+    "demo_image_id": 250368,
+    "demo_scores": [
+      -116,
+      116
+    ]
+  }
+}
