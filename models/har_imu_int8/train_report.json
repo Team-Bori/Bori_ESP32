@@ -1,0 +1,126 @@
+{
+  "channels": 9,
+  "channel_names": [
+    "body_acc_x",
+    "body_acc_y",
+    "body_acc_z",
+    "body_gyro_x",
+    "body_gyro_y",
+    "body_gyro_z",
+    "total_acc_x",
+    "total_acc_y",
+    "total_acc_z"
+  ],
+  "params": 3526,
+  "tflite_bytes": 10520,
+  "best_epoch": 31,
+  "val_subjects": [
+    28,
+    29,
+    30
+  ],
+  "float_test_accuracy": 0.9203,
+  "int8_test_accuracy": 0.9182,
+  "confusion_int8": [
+    [
+      492,
+      0,
+      4,
+      0,
+      0,
+      0
+    ],
+    [
+      13,
+      435,
+      23,
+      0,
+      0,
+      0
+    ],
+    [
+      1,
+      13,
+      406,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      7,
+      0,
+      398,
+      86,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      91,
+      441,
+      0
+    ],
+    [
+      0,
+      3,
+      0,
+      0,
+      0,
+      534
+    ]
+  ],
+  "ops": [
+    "EXPAND_DIMS",
+    "CONV_2D",
+    "RESHAPE",
+    "MAX_POOL_2D",
+    "MEAN",
+    "FULLY_CONNECTED",
+    "SOFTMAX"
+  ],
+  "normalization": {
+    "mean": [
+      -0.0007501887157559395,
+      -0.00022599556541536003,
+      -0.00033806884312070906,
+      0.002416237723082304,
+      -0.0014460404636338353,
+      -0.0002263575152028352,
+      0.8035919070243835,
+      0.03029632940888405,
+      0.08326651155948639
+    ],
+    "std": [
+      0.19583167135715485,
+      0.12485609948635101,
+      0.10719277709722519,
+      0.4052923917770386,
+      0.3758034110069275,
+      0.2578590512275696,
+      0.4126022458076477,
+      0.39557772874832153,
+      0.3576316833496094
+    ]
+  },
+  "input_quantization": {
+    "scale": 0.08275828510522842,
+    "zero_point": 7
+  },
+  "eval_samples": 150,
+  "eval_int8_accuracy": 0.9267,
+  "demo_test_index": 80,
+  "labels": [
+    "walking",
+    "walking_upstairs",
+    "walking_downstairs",
+    "sitting",
+    "standing",
+    "laying"
+  ],
+  "tensorflow": "2.21.0",
+  "numpy": "2.2.6",
+  "python": "3.10.11",
+  "seed": 42
+}

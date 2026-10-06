@@ -96,6 +96,67 @@
       "package_path": "models/cnn_mnist_int8/default_model.bin"
     },
     {
+      "model_id": "har_imu_int8",
+      "name": "Human activity recognition 1D CNN (int8)",
+      "description": "스마트폰 IMU 원시 신호 2.56초 창(50Hz × 128, 9채널)으로 걷기·계단 오르기·계단 내려가기·앉기·서기·눕기 6가지 동작 분류. 센서 시계열 대표 모델.",
+      "task": "classification",
+      "firmware": "tflm_runtime",
+      "package_format": "BTF1",
+      "input": {
+        "shape": [
+          1,
+          128,
+          9
+        ],
+        "dtype": "int8",
+        "scale": 0.08275828510522842,
+        "zero_point": 7,
+        "bytes": 1152
+      },
+      "output": {
+        "shape": [
+          1,
+          6
+        ],
+        "dtype": "int8",
+        "scale": 0.00390625,
+        "zero_point": -128,
+        "bytes": 6
+      },
+      "package": {
+        "size_bytes": 185400,
+        "checksum": "0x02621d69",
+        "sha256": "520363594d193fbd644d3f3f7c39fa3f3f591c29dbb86e032fb4b620526bbe21",
+        "tflite_bytes": 10520,
+        "arena_bytes": 0,
+        "eval_samples": 150,
+        "demo": true
+      },
+      "source": {
+        "model": "trained in this repository",
+        "train": "pc/models/har_imu/train.py",
+        "license": "repository license (model weights); see dataset for the samples"
+      },
+      "dataset": {
+        "name": "Human Activity Recognition Using Smartphones (UCI)",
+        "url": "https://archive.ics.uci.edu/dataset/240/human+activity+recognition+using+smartphones",
+        "download": "https://archive.ics.uci.edu/static/public/240/human+activity+recognition+using+smartphones.zip",
+        "zip_sha256": "c00b803081a5c797cd5e4b83700a9810b38d53d9d84e01917e090e1fdbc81031",
+        "version": "donated 2012-12-09, DOI 10.24432/C54S4K",
+        "split": "official train (21 subjects) / test (9 subjects), subjects disjoint",
+        "license": "CC BY 4.0",
+        "citation": "D. Anguita, A. Ghio, L. Oneto, X. Parra, J. L. Reyes-Ortiz. A Public Domain Dataset for Human Activity Recognition Using Smartphones. ESANN 2013."
+      },
+      "host": {
+        "arena_bytes_estimate": 7120,
+        "check_tool": "tflite-micro (pip, TFLM reference kernels, x86_64)",
+        "eval_samples": 150,
+        "eval_accuracy_int8": 0.9267
+      },
+      "board": {},
+      "package_path": "models/har_imu_int8/default_model.bin"
+    },
+    {
       "model_id": "mlp_64_16_10_int8",
       "name": "Digit MLP 64-16-10 (int8)",
       "description": "8x8 handwritten digit classifier (scikit-learn digits), hand-written int8 kernel. Runs on the mlp firmware only.",
