@@ -8,13 +8,14 @@ timestamp. Optionally each message is also POSTed to a server URL.
 
 Works with both firmwares:
   mlp           protocol v1 (m, i, b, p)
-  tflm_runtime  protocol v2 (v1 commands + a, binary frames for streamed tests)
+  tflm_runtime  protocol v2 (v1 commands + a, l, binary frames for streamed tests)
 
 Examples:
   python3 esp_monitor.py /dev/ttyUSB0 info
   python3 esp_monitor.py /dev/ttyUSB0 infer
   python3 esp_monitor.py /dev/ttyUSB0 bench
   python3 esp_monitor.py /dev/ttyUSB0 eval                      # v2: package eval samples
+  python3 esp_monitor.py /dev/ttyUSB0 labels                    # v2: label list
   python3 esp_monitor.py /dev/ttyUSB0 run-test test.npz --post http://server/api/metrics
   python3 esp_monitor.py /dev/ttyUSB0 firmware-id
   python3 esp_monitor.py /dev/ttyUSB0 wait-ready --reset
@@ -429,6 +430,15 @@ def cmd_run_test(board, out, args):
     if not model.get("loaded"):
         raise BoardError("no model loaded on the board", EXIT_BOARD_ERROR, model)
 
+    labels = model.get("labels")
+    if labels is None and model.get("labels_truncated"):
+        # info leaves long label lists out (1 KB line limit); 'l' returns them (builds after b2a7e8c).
+        try:
+            msg = board.command("l", "labels", 5)
+            if not msg.get("truncated"):
+                labels = msg.get("labels")
+        except BoardError:
+            pass
     try:
         x, y = td.load(args.test_file)
         if args.no_labels:
@@ -436,7 +446,7 @@ def cmd_run_test(board, out, args):
         data = td.prepare(x, y, input_shape=model["input"]["shape"], input_dtype=model["input"]["dtype"],
                           task=model["task"], output_elements=model["output_count"]
                           if "output_count" in model else _elements(model["output"]["shape"]),
-                          labels=model.get("labels"))
+                          labels=labels)
     except (td.TestDataError, OSError, KeyError, ValueError) as e:
         out.emit({"type": "test_report", "ok": False, "error": f"bad test file: {e}",
                   "file": str(args.test_file)})
@@ -520,6 +530,8 @@ def main():
         func=cmd_single("b", "bench", 60))
     sub.add_parser("eval", help="v2: run all evaluation samples in the package").set_defaults(
         func=cmd_single("a", "eval", 900))
+    sub.add_parser("labels", help="v2: label list of the loaded model").set_defaults(
+        func=cmd_single("l", "labels", 5))
 
     p = sub.add_parser("firmware-id", help="print the firmware running on the board")
     p.add_argument("--timeout", type=float, default=10.0)

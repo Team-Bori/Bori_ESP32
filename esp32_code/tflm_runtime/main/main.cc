@@ -4,7 +4,9 @@
  * Serial protocol v2 (docs/PROTOCOL_v2.md), a superset of v1:
  *   - every machine-readable line is one JSON object terminated by '\n';
  *     other lines (ESP_LOG, bootloader, TFLM messages) must be ignored by the host
- *   - 1-byte commands: m, i, b, p (v1) and a (eval on the package samples)
+ *   - 1-byte commands: m, i, b, p (v1), a (eval on the package samples), l (labels)
+ *   - periodic metrics are measured by a task on the other core, so commands that do
+ *     not run the model (m, l, p, frames) are answered while a slow model is measured
  *   - binary frames (start with 0xA5 0x5A) for test inputs sent by the server
  *     and for changing the baud rate
  */
@@ -16,6 +18,7 @@
 #include <string.h>
 
 #include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
 #include "freertos/task.h"
 
 #include "esp_attr.h"
@@ -57,6 +60,11 @@
 
 /* Output values listed in inference / test_result messages (keeps lines < 1 KB). */
 #define MAX_REPORTED_OUTPUTS 16
+/* Periodic metrics run on the APP CPU; only the main task prints. */
+#define METRICS_TASK_STACK 8192
+#define METRICS_TASK_CORE 1
+/* 'l' lists labels until the line would exceed this many characters. */
+#define LABELS_MAX_LINE 1000
 /* Longest label text copied into a test_result line. */
 #define MAX_RESULT_LABEL_CHARS 64
 /* info line limit (without "
@@ -67,6 +75,22 @@
 static const char *TAG = "TFLM_APP";
 
 static bool g_periodic_enabled = true;
+
+/*
+ * The interpreter (input tensor, Invoke) is used by the main task (commands, tests) and by
+ * the metrics task. Whoever runs the model holds this lock; printing stays in the main task.
+ */
+static SemaphoreHandle_t s_interp_lock;
+
+static void interp_lock(void)
+{
+    xSemaphoreTake(s_interp_lock, portMAX_DELAY);
+}
+
+static void interp_unlock(void)
+{
+    xSemaphoreGive(s_interp_lock);
+}
 
 /* Crash guard: survives a panic/watchdog reset, not a power cycle. */
 #define GUARD_LOADING 0x4C4F4144u /* "LOAD" */
@@ -549,20 +573,37 @@ static void run_eval(void)
     bori_log_memory(TAG);
 }
 
-static void report_metrics(void)
+enum { METRICS_IDLE = 0, METRICS_RUNNING = 1, METRICS_DONE = 2 };
+
+static struct {
+    TaskHandle_t task;
+    volatile int state;
+    LatencyStats stats;
+    bool ok;
+} s_metrics;
+
+/* Measures the demo input for the metrics time budget whenever the main loop asks. */
+static void metrics_task(void *arg)
+{
+    (void)arg;
+    while (true) {
+        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+        interp_lock();
+        runtime_set_demo_input();
+        s_metrics.ok = run_timed(METRICS_BUDGET_US, METRICS_MAX_ITERATIONS, &s_metrics.stats);
+        interp_unlock();
+        __atomic_store_n(&s_metrics.state, METRICS_DONE, __ATOMIC_RELEASE);
+    }
+}
+
+/* Prints a metrics line; `measured` false when there is no model to measure. */
+static void print_metrics(bool measured)
 {
     static uint32_t seq = 0;
     ++seq;
     const int64_t uptime_ms = esp_timer_get_time() / 1000;
-
-    /* Measure first so nothing (e.g. a TFLM error log) is printed inside the JSON line. */
-    LatencyStats s;
-    s.reset();
-    bool ok = true;
-    if (g_rt.loaded) {
-        runtime_set_demo_input();
-        ok = run_timed(METRICS_BUDGET_US, METRICS_MAX_ITERATIONS, &s);
-    }
+    const LatencyStats &s = s_metrics.stats;
+    const bool ok = measured && s_metrics.ok;
 
     printf("{\"type\":\"metrics\",\"seq\":%" PRIu32 ",\"uptime_ms\":%" PRId64 ",\"model_loaded\":%s,",
            seq, uptime_ms, g_rt.loaded ? "true" : "false");
@@ -587,6 +628,31 @@ static void report_metrics(void)
         ESP_LOGI(TAG, "[metrics #%" PRIu32 "] uptime %" PRId64 " s, avg %.1f us (%" PRIu32 " runs)",
                  seq, uptime_ms / 1000, s.avg(), s.count);
     }
+}
+
+static void print_labels(void)
+{
+    if (!require_model()) {
+        return;
+    }
+    const btf_package_t &pkg = g_rt.pkg;
+    /* {"type":"labels","count":N,"labels":[...],"shown":K,"truncated":B} */
+    int n = printf("{\"type\":\"labels\",\"count\":%" PRIu32 ",\"labels\":[", pkg.label_count);
+    uint32_t shown = 0;
+    for (; shown < pkg.label_count; ++shown) {
+        const char *label = btf_label(&pkg, shown);
+        const size_t need = json_string_len(label) + (shown ? 1 : 0);
+        if ((size_t)n + need + 40 > LABELS_MAX_LINE) {
+            break;
+        }
+        if (shown) {
+            putchar(',');
+        }
+        bori_print_json_string(label);
+        n += (int)need;
+    }
+    printf("],\"shown\":%" PRIu32 ",\"truncated\":%s}\n", shown, shown < pkg.label_count ? "true" : "false");
+    fflush(stdout);
 }
 
 static void set_periodic(bool enabled)
@@ -852,6 +918,10 @@ static void handle_frame(void)
         if (s_test.active) {
             end_test(true, -1);
         }
+        /* A metrics measurement may still be running: let it finish before samples are
+         * streamed straight into the input tensor (no new one starts during the session). */
+        interp_lock();
+        interp_unlock();
         s_test.expected_count = len >= 4 ? rd32(small) : 0;
         s_test.has_labels = len >= 5 && small[4] != 0;
         s_test.report_outputs = len >= 6 && small[5] != 0;
@@ -877,7 +947,9 @@ static void handle_frame(void)
             break;
         }
         int64_t us = 0;
+        interp_lock();
         const bool invoke_ok = runtime_invoke(&us);
+        interp_unlock();
         handle_test_sample(seq, s_test.has_labels ? labels : nullptr, invoke_ok, us);
         break;
     }
@@ -923,20 +995,49 @@ static void load_model_with_guard(void)
     s_load_guard = 0;
 }
 
+/* Byte read while skipping an escape sequence that turned out not to be one. */
+static int s_pending_byte = -1;
+
+/*
+ * Terminal keys (arrows, Home, F-keys) send ESC [ ... or ESC O ...; drop the whole sequence
+ * instead of answering unknown_command for '[' and 'A'. A lone ESC is ignored.
+ */
+static void skip_escape_sequence(void)
+{
+    const int next = link_read_byte(30);
+    if (next != '[' && next != 'O') {
+        s_pending_byte = next;  /* not a sequence: handle that byte normally (-1 = nothing) */
+        return;
+    }
+    for (int i = 0; i < 8; ++i) {
+        const int b = link_read_byte(30);
+        if (b < 0 || (b >= 0x40 && b <= 0x7E)) {
+            return;  /* final byte of the sequence */
+        }
+    }
+}
+
 extern "C" void app_main(void)
 {
     link_init();
+    s_interp_lock = xSemaphoreCreateMutex();
     bori_print_boot(TAG, PROTOCOL_VERSION, FIRMWARE_ID);
 
     load_model_with_guard();
     print_load_error();
+    if (g_rt.loaded &&
+        xTaskCreatePinnedToCore(metrics_task, "metrics", METRICS_TASK_STACK, nullptr, 1,
+                                &s_metrics.task, METRICS_TASK_CORE) != pdPASS) {
+        s_metrics.task = nullptr;
+        ESP_LOGE(TAG, "metrics task not created; periodic metrics run without measurement");
+    }
 
-    printf("{\"type\":\"ready\",\"model_loaded\":%s,\"commands\":\"i,b,m,p,a\",\"frames\":true,"
+    printf("{\"type\":\"ready\",\"model_loaded\":%s,\"commands\":\"i,b,m,p,a,l\",\"frames\":true,"
            "\"periodic\":%s,\"interval_ms\":%d}\n",
            g_rt.loaded ? "true" : "false", g_periodic_enabled ? "true" : "false", METRICS_INTERVAL_MS);
     fflush(stdout);
     ESP_LOGI(TAG, "[ready] model %s. commands: i=inference, b=benchmark, m=info, p=toggle metrics, "
-             "a=evaluate package samples; binary frames for streamed tests",
+             "a=evaluate package samples, l=labels; binary frames for streamed tests",
              g_rt.loaded ? "loaded" : "NOT loaded");
 
     int64_t next_report_us = esp_timer_get_time() + (int64_t)METRICS_INTERVAL_MS * 1000;
@@ -954,13 +1055,34 @@ extern "C" void app_main(void)
         if (s_test.active && now - s_test.last_activity_us > (int64_t)TEST_IDLE_TIMEOUT_MS * 1000) {
             end_test(true, -1);
         }
-        if (g_periodic_enabled && !s_test.active && !s_baud.pending && now >= next_report_us) {
-            report_metrics();
+        if (__atomic_load_n(&s_metrics.state, __ATOMIC_ACQUIRE) == METRICS_DONE) {
+            print_metrics(true);
+            s_metrics.state = METRICS_IDLE;
             next_report_us = esp_timer_get_time() + (int64_t)METRICS_INTERVAL_MS * 1000;
         }
+        if (g_periodic_enabled && !s_test.active && !s_baud.pending &&
+            s_metrics.state == METRICS_IDLE && now >= next_report_us) {
+            if (s_metrics.task != nullptr) {
+                s_metrics.state = METRICS_RUNNING;  /* printed when the task is done */
+                xTaskNotifyGive(s_metrics.task);
+            } else {
+                print_metrics(false);
+                next_report_us = esp_timer_get_time() + (int64_t)METRICS_INTERVAL_MS * 1000;
+            }
+        }
 
-        const int ch = link_read_byte(20);
+        int ch;
+        if (s_pending_byte >= 0) {
+            ch = s_pending_byte;
+            s_pending_byte = -1;
+        } else {
+            ch = link_read_byte(20);
+        }
         if (ch < 0) {
+            continue;
+        }
+        if (ch == 0x1B) {
+            skip_escape_sequence();
             continue;
         }
         if (ch == FRAME_SYNC0) {
@@ -971,16 +1093,25 @@ extern "C" void app_main(void)
         bool known = true;
         switch (ch) {
         case 'i':
+            interp_lock();
             run_inference();
+            interp_unlock();
             break;
         case 'b':
+            interp_lock();
             run_benchmark();
+            interp_unlock();
             break;
         case 'm':
             print_info();
             break;
         case 'a':
+            interp_lock();
             run_eval();
+            interp_unlock();
+            break;
+        case 'l':
+            print_labels();
             break;
         case 'p':
             set_periodic(!g_periodic_enabled);
@@ -994,9 +1125,9 @@ extern "C" void app_main(void)
             }
             char message[48];
             if (ch == '"' || ch == '\\') {
-                snprintf(message, sizeof(message), "got 0x%02X; use i, b, m, p or a", ch);
+                snprintf(message, sizeof(message), "got 0x%02X; use i, b, m, p, a or l", ch);
             } else {
-                snprintf(message, sizeof(message), "got '%c' (0x%02X); use i, b, m, p or a", ch, ch);
+                snprintf(message, sizeof(message), "got '%c' (0x%02X); use i, b, m, p, a or l", ch, ch);
             }
             print_error("unknown_command", message);
             break;
