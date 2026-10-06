@@ -1,2 +1,7 @@
 numpy
 scikit-learn
+# BTF1 packaging (pc/bori_package.py): reads .tflite flatbuffers
+tflite==2.18.0
+flatbuffers>=24.3.25
+# Host check (bori_package.py check) needs tflite-micro, Linux x86_64 only.
+# On Windows it runs in WSL: see docs/ADDING_A_MODEL.md "host check".

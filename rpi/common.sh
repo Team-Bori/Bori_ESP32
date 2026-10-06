@@ -4,10 +4,11 @@
 RPI_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$RPI_DIR/.." && pwd)"
 
-# Partition layout (esp32_code/mlp_esp32/partitions.csv)
-MODEL_OFFSET="0x1E0000"
-MODEL_PARTITION_BYTES=131072      # 0x20000
-FIRMWARE_LIMIT_BYTES=1966080      # 0x1E0000: merged image must end before the model partition
+# Partition layout (esp32_code/*/partitions.csv, same for every firmware).
+# Changing it means every board must be re-flashed from 0x0 (see docs/PACKAGE_FORMAT.md).
+MODEL_OFFSET="0x200000"
+MODEL_PARTITION_BYTES=2097152     # 0x200000 (2 MB)
+FIRMWARE_LIMIT_BYTES=2097152      # 0x200000: merged image must end before the model partition
 
 die() {
   echo "ERROR: $*" >&2
@@ -29,6 +30,7 @@ load_config() {
   : "${FLASH_BAUD:=921600}" "${BOOT_TIMEOUT:=15}" "${BOOT_SETTLE:=3}"
   : "${DEFAULT_MODEL:=$PROJECT_ROOT/models/mlp/default_model.bin}"
   : "${DEFAULT_FIRMWARE:=$PROJECT_ROOT/firmware/mlp.bin}"
+  : "${STREAM_BAUD:=921600}"
 }
 
 require_tools() {
@@ -97,13 +99,38 @@ download() {
     || die "download failed (missing file, private repo, or larger than $max bytes): $url"
 }
 
-# Validates model.bin and prints its checksum (0x........) on stdout.
+# validate_model <file>: validates an MLP1/BTF1 model file.
+# Sets MODEL_CHECKSUM (0x........) and MODEL_FIRMWARE (mlp | tflm_runtime); exits on failure.
 validate_model() {
   local model="$1" output
   output="$(python3 "$PROJECT_ROOT/pc/validate_model.py" "$model" 2>&1)" \
     || die "invalid model file: $output"
   echo "$output" >&2
-  echo "$output" | sed -n 's/^checksum=//p'
+  MODEL_CHECKSUM="$(echo "$output" | sed -n 's/^checksum=//p')"
+  MODEL_FIRMWARE="$(echo "$output" | sed -n 's/^firmware=//p')"
+  [[ -n "$MODEL_CHECKSUM" && -n "$MODEL_FIRMWARE" ]] || die "validate_model.py gave no checksum/firmware"
+}
+
+# validate_firmware <file>: checks a merged image (layout, size). Sets FIRMWARE_ID; exits on failure.
+validate_firmware() {
+  local image="$1" output
+  output="$(python3 "$PROJECT_ROOT/pc/validate_firmware.py" "$image" 2>&1)" \
+    || die "invalid firmware image: $output"
+  echo "$output" >&2
+  FIRMWARE_ID="$(echo "$output" | sed -n 's/^firmware=//p')"
+}
+
+# board_firmware <port>: prints the firmware id running on the board (mlp | tflm_runtime).
+# Old mlp builds without firmware_id report as mlp. Fails if the board does not answer.
+board_firmware() {
+  python3 "$RPI_DIR/esp_monitor.py" "$1" firmware-id
+}
+
+# require_compatible <model_firmware> <firmware_id>: refuse to pair a package with the wrong firmware.
+require_compatible() {
+  local needs="$1" has="$2"
+  [[ "$needs" == "$has" ]] \
+    || die "this model needs the '$needs' firmware but the board runs '$has'. Flash the '$needs' firmware first (firmware/$needs.bin)"
 }
 
 flash_image() {

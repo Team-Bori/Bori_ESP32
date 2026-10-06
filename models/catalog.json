@@ -1,0 +1,135 @@
+{
+  "version": 1,
+  "models": [
+    {
+      "model_id": "mlp_64_16_10_int8",
+      "name": "Digit MLP 64-16-10 (int8)",
+      "description": "8x8 handwritten digit classifier (scikit-learn digits), hand-written int8 kernel. Runs on the mlp firmware only.",
+      "task": "classification",
+      "firmware": "mlp",
+      "package_format": "MLP1",
+      "input": {
+        "shape": [
+          64
+        ],
+        "dtype": "int8"
+      },
+      "output": {
+        "shape": [
+          10
+        ],
+        "dtype": "int32 logits"
+      },
+      "package": {
+        "size_bytes": 1340,
+        "checksum": "0x12550a83"
+      },
+      "source": {
+        "model": "trained in this repository (pc/train.py)",
+        "license": "repository license"
+      },
+      "dataset": {
+        "name": "scikit-learn digits (UCI Optical Recognition of Handwritten Digits)",
+        "license": "CC BY 4.0"
+      },
+      "host": {},
+      "board": {
+        "measured_at": "2026-10-06",
+        "firmware": "mlp b2a7e8c (firmware/mlp.bin, model partition 0x200000)",
+        "cpu_freq_mhz": 160,
+        "latency_us": {
+          "bench_avg": 103.1,
+          "bench_iterations": 1000,
+          "demo_single": 115
+        },
+        "demo": "pred 5 = expected 5, logits identical to the protocol v1 example",
+        "notes": "same as before the partition change (103 us)"
+      },
+      "package_path": "models/mlp/default_model.bin"
+    },
+    {
+      "model_id": "sine_regression",
+      "name": "Sine regression (TFLM hello_world)",
+      "description": "Predicts sin(x) for x in [0, 2π). Smallest possible model; used to verify the tflm_runtime firmware (package loading, regression path, i/b/a/m/metrics).",
+      "task": "regression",
+      "firmware": "tflm_runtime",
+      "package_format": "BTF1",
+      "input": {
+        "shape": [
+          1,
+          1
+        ],
+        "dtype": "int8",
+        "scale": 0.024480115622282028,
+        "zero_point": -128,
+        "bytes": 1
+      },
+      "output": {
+        "shape": [
+          1,
+          1
+        ],
+        "dtype": "int8",
+        "scale": 0.008290956728160381,
+        "zero_point": 5,
+        "bytes": 1
+      },
+      "package": {
+        "size_bytes": 3272,
+        "checksum": "0xfc8a647d",
+        "sha256": "5bbd17800c41f4525afc77ecb060a9f9cef15b3cb40a10b2d3e34b1f3583fc94",
+        "tflite_bytes": 2704,
+        "arena_bytes": 0,
+        "eval_samples": 64,
+        "demo": true
+      },
+      "source": {
+        "url": "https://github.com/tensorflow/tflite-micro/tree/22c2469a233981012ac16ad849f59c7105655aa9/tensorflow/lite/micro/examples/hello_world",
+        "file": "tensorflow/lite/micro/examples/hello_world/models/hello_world_int8.tflite",
+        "commit": "22c2469a233981012ac16ad849f59c7105655aa9",
+        "sha256": "505ee4fae7fa46ab67bea4c08b4969eb3eb8b9114c50595ec4a29d9a27993202",
+        "license": "Apache-2.0",
+        "prepare": "pc/models/sine_regression/prepare.py"
+      },
+      "dataset": {
+        "name": "synthetic: y = sin(x)",
+        "license": "n/a (generated)"
+      },
+      "host": {
+        "arena_bytes_estimate": 1456,
+        "check_tool": "tflite-micro (pip, TFLM reference kernels, x86_64)",
+        "eval_samples": 64,
+        "eval_accuracy_int8": 1.0,
+        "eval_mean_abs_err": 0.020747,
+        "eval_max_abs_err": 0.100464
+      },
+      "board": {
+        "measured_at": "2026-10-06",
+        "firmware": "tflm_runtime b2a7e8c (firmware/tflm_runtime.bin)",
+        "cpu_freq_mhz": 240,
+        "latency_us": {
+          "bench_avg": 41.7,
+          "bench_min": 41,
+          "bench_max": 48,
+          "bench_iterations": 1000,
+          "eval_avg": 43.6,
+          "stream_avg": 188.2,
+          "stream_min": 180,
+          "stream_max": 236,
+          "demo_single": 164
+        },
+        "arena_used_bytes": 716,
+        "arena_alloc_bytes": 154624,
+        "max_arena_bytes": 155648,
+        "eval_samples": 64,
+        "eval_accuracy": 1.0,
+        "eval_mean_abs_err": 0.0207465,
+        "eval_wall_ms": 3,
+        "heap_free_loaded": 132616,
+        "stack_free": 7952,
+        "notes": "bench = warm cache loop; stream = one inference per received sample (cold flash cache). The 1st build measured bench 53.5 us: code layout changes move this tiny model by ~20%."
+      },
+      "package_path": "models/sine_regression/default_model.bin"
+    }
+  ]
+}

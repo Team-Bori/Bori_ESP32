@@ -1,0 +1,49 @@
+{
+  "model_id": "mlp_64_16_10_int8",
+  "name": "Digit MLP 64-16-10 (int8)",
+  "description": "8x8 handwritten digit classifier (scikit-learn digits), hand-written int8 kernel. Runs on the mlp firmware only.",
+  "task": "classification",
+  "firmware": "mlp",
+  "package_format": "MLP1",
+  "files": {
+    "package": "default_model.bin",
+    "train": "pc/train.py"
+  },
+  "input": {
+    "shape": [
+      64
+    ],
+    "dtype": "int8"
+  },
+  "output": {
+    "shape": [
+      10
+    ],
+    "dtype": "int32 logits"
+  },
+  "package": {
+    "size_bytes": 1340,
+    "checksum": "0x12550a83"
+  },
+  "source": {
+    "model": "trained in this repository (pc/train.py)",
+    "license": "repository license"
+  },
+  "dataset": {
+    "name": "scikit-learn digits (UCI Optical Recognition of Handwritten Digits)",
+    "license": "CC BY 4.0"
+  },
+  "host": {},
+  "board": {
+    "measured_at": "2026-10-06",
+    "firmware": "mlp b2a7e8c (firmware/mlp.bin, model partition 0x200000)",
+    "cpu_freq_mhz": 160,
+    "latency_us": {
+      "bench_avg": 103.1,
+      "bench_iterations": 1000,
+      "demo_single": 115
+    },
+    "demo": "pred 5 = expected 5, logits identical to the protocol v1 example",
+    "notes": "same as before the partition change (103 us)"
+  }
+}

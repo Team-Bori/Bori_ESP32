@@ -1,5 +1,7 @@
 # ESP32 MLP 시리얼 프로토콜 (v1)
 
+> `mlp` 펌웨어의 프로토콜이다. 범용 런타임 `tflm_runtime`은 상위 호환인 v2를 쓴다: [docs/PROTOCOL_v2.md](../../docs/PROTOCOL_v2.md)
+
 - UART0, 115200 baud, 8N1
 - 호스트(라즈베리파이)는 **1바이트 명령**을 보내고, 보드는 **JSON 객체 한 줄**(`\n` 종료)로 응답한다.
 - `{`로 시작하지 않는 줄(부트로더 메시지, ESP_LOG 출력)은 무시한다.
@@ -27,10 +29,11 @@
 
 ### boot
 ```json
-{"type":"boot","proto":1,"fw_version":"c6c4415","idf_version":"v5.3.1","reset_reason":"poweron","fault_reset":false}
+{"type":"boot","proto":1,"firmware_id":"mlp","fw_version":"c6c4415","idf_version":"v5.3.1","reset_reason":"poweron","fault_reset":false}
 ```
 - `reset_reason`: `poweron` `external` `software` `panic` `int_wdt` `task_wdt` `wdt` `deepsleep` `brownout` `sdio` `unknown`
 - `fault_reset`: 직전 리셋이 패닉·워치독·브라운아웃이면 `true`. 에러/실패율 집계에 사용한다.
+- `firmware_id`: 펌웨어 구분 (`mlp`). 파티션 변경(모델 0x200000) 이후 빌드부터 들어간다. 없으면 `mlp`로 간주한다.
 
 ### ready
 ```json
@@ -53,12 +56,12 @@
 
 ### info
 ```json
-{"type":"info","proto":1,
+{"type":"info","proto":1,"firmware_id":"mlp",
  "board":{"chip":"ESP32","cores":2,"revision":301,"cpu_freq_mhz":160,"flash_bytes":4194304,"psram_bytes":0,
           "wifi":true,"bt":true,"ai_accelerator":false,"fw_version":"c6c4415","idf_version":"v5.3.1"},
  "supported_models":["mlp_64_16_10_int8"],
  "model":{"id":"mlp_64_16_10_int8","loaded":true,"dims":[64,16,10],"quantization":"int8",
-          "size_bytes":1340,"checksum":"0x12550a83","partition_offset":1966080,"partition_bytes":131072},
+          "size_bytes":1340,"checksum":"0x12550a83","partition_offset":2097152,"partition_bytes":2097152},
  "memory":{...}}
 ```
 - `model.size_bytes`, `model.checksum`은 모델이 로드된 경우에만 있다.
@@ -88,6 +91,6 @@
 ```
 | code | 의미 |
 | --- | --- |
-| `model_load_failed` | 부팅 시 모델 파티션에 유효한 model.bin이 없음 |
+| `model_load_failed` | 부팅 시 모델 파티션(0x200000)에 유효한 model.bin이 없음 |
 | `model_not_loaded` | 모델 없이 `i`/`b`를 요청함 |
 | `unknown_command` | 알 수 없는 명령 |

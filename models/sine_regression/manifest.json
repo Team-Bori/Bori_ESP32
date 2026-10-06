@@ -1,0 +1,98 @@
+{
+  "model_id": "sine_regression",
+  "name": "Sine regression (TFLM hello_world)",
+  "description": "Predicts sin(x) for x in [0, 2π). Smallest possible model; used to verify the tflm_runtime firmware (package loading, regression path, i/b/a/m/metrics).",
+  "task": "regression",
+  "firmware": "tflm_runtime",
+  "package_format": "BTF1",
+  "files": {
+    "tflite": "model.tflite",
+    "package": "default_model.bin"
+  },
+  "build": {
+    "arena_bytes": 0,
+    "task_param": 0.15,
+    "demo_input": "samples/demo_input.npy",
+    "demo_expected": "samples/demo_expected.npy",
+    "eval_inputs": "samples/eval_inputs.npy",
+    "eval_expected": "samples/eval_expected.npy"
+  },
+  "source": {
+    "url": "https://github.com/tensorflow/tflite-micro/tree/22c2469a233981012ac16ad849f59c7105655aa9/tensorflow/lite/micro/examples/hello_world",
+    "file": "tensorflow/lite/micro/examples/hello_world/models/hello_world_int8.tflite",
+    "commit": "22c2469a233981012ac16ad849f59c7105655aa9",
+    "sha256": "505ee4fae7fa46ab67bea4c08b4969eb3eb8b9114c50595ec4a29d9a27993202",
+    "license": "Apache-2.0",
+    "prepare": "pc/models/sine_regression/prepare.py"
+  },
+  "dataset": {
+    "name": "synthetic: y = sin(x)",
+    "license": "n/a (generated)"
+  },
+  "input": {
+    "shape": [
+      1,
+      1
+    ],
+    "dtype": "int8",
+    "scale": 0.024480115622282028,
+    "zero_point": -128,
+    "bytes": 1
+  },
+  "output": {
+    "shape": [
+      1,
+      1
+    ],
+    "dtype": "int8",
+    "scale": 0.008290956728160381,
+    "zero_point": 5,
+    "bytes": 1
+  },
+  "ops": [
+    "FULLY_CONNECTED"
+  ],
+  "package": {
+    "size_bytes": 3272,
+    "checksum": "0xfc8a647d",
+    "sha256": "5bbd17800c41f4525afc77ecb060a9f9cef15b3cb40a10b2d3e34b1f3583fc94",
+    "tflite_bytes": 2704,
+    "arena_bytes": 0,
+    "eval_samples": 64,
+    "demo": true
+  },
+  "host": {
+    "arena_bytes_estimate": 1456,
+    "check_tool": "tflite-micro (pip, TFLM reference kernels, x86_64)",
+    "eval_samples": 64,
+    "eval_accuracy_int8": 1.0,
+    "eval_mean_abs_err": 0.020747,
+    "eval_max_abs_err": 0.100464
+  },
+  "board": {
+    "measured_at": "2026-10-06",
+    "firmware": "tflm_runtime b2a7e8c (firmware/tflm_runtime.bin)",
+    "cpu_freq_mhz": 240,
+    "latency_us": {
+      "bench_avg": 41.7,
+      "bench_min": 41,
+      "bench_max": 48,
+      "bench_iterations": 1000,
+      "eval_avg": 43.6,
+      "stream_avg": 188.2,
+      "stream_min": 180,
+      "stream_max": 236,
+      "demo_single": 164
+    },
+    "arena_used_bytes": 716,
+    "arena_alloc_bytes": 154624,
+    "max_arena_bytes": 155648,
+    "eval_samples": 64,
+    "eval_accuracy": 1.0,
+    "eval_mean_abs_err": 0.0207465,
+    "eval_wall_ms": 3,
+    "heap_free_loaded": 132616,
+    "stack_free": 7952,
+    "notes": "bench = warm cache loop; stream = one inference per received sample (cold flash cache). The 1st build measured bench 53.5 us: code layout changes move this tiny model by ~20%."
+  }
+}
