@@ -1,0 +1,28 @@
+{
+  "seed": 42,
+  "epochs": 8,
+  "filters": [
+    8,
+    16
+  ],
+  "params": 5258,
+  "tflite_bytes": 10552,
+  "test_samples": 10000,
+  "float_test_accuracy": 0.9828,
+  "int8_test_accuracy": 0.9826,
+  "eval_samples": 200,
+  "eval_int8_accuracy": 0.995,
+  "demo_test_index": 139,
+  "demo_label": 4,
+  "input_quantization": {
+    "scale": 0.003921568859368563,
+    "zero_point": -128
+  },
+  "output_quantization": {
+    "scale": 0.00390625,
+    "zero_point": -128
+  },
+  "tensorflow": "2.21.0",
+  "numpy": "2.2.6",
+  "python": "3.10.11"
+}

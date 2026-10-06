@@ -39,4 +39,5 @@
 - [PACKAGE_FORMAT.md](docs/PACKAGE_FORMAT.md): 모델 패키지(BTF1)와 파티션
 - [PROTOCOL_v2.md](docs/PROTOCOL_v2.md): 시리얼 프로토콜 v2
 - [TEST_DATA_FORMAT.md](docs/TEST_DATA_FORMAT.md): 서버 테스트 파일
-- [ADDING_A_MODEL.md](docs/ADDING_A_MODEL.md): 모델 추가 가이드
+- [ADDING_A_MODEL.md](docs/ADDING_A_MODEL.md): 모델 추가 가이드 (개발팀)
+- [USER_MODEL_GUIDE.md](docs/USER_MODEL_GUIDE.md): 사용자 자체 모델 업로드 가이드 (명세 1.6)
