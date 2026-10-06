@@ -1,0 +1,5 @@
+# models/kws_micro_speech_int8 scripts.
+# prepare.py needs pc/requirements.txt (tflite parser).
+# features.py / evaluate.py need tflite-micro (Linux x86_64, WSL on Windows) and numpy.
+tflite-micro
+numpy
