@@ -1,0 +1,155 @@
+{
+  "model_id": "person_detection_int8",
+  "name": "Person detection 96x96 grayscale (TFLM person_detection, int8)",
+  "description": "96×96 흑백 이미지에 사람이 있는지 판별 (no_person / person). MobileNet v1 0.25, Visual Wake Words. 이 보드(PSRAM 없음)의 메모리 한계 시험 모델.",
+  "task": "classification",
+  "firmware": "tflm_runtime",
+  "package_format": "BTF1",
+  "files": {
+    "tflite": "model.tflite",
+    "package": "default_model.bin"
+  },
+  "build": {
+    "arena_bytes": 0,
+    "labels": [
+      "no_person",
+      "person"
+    ],
+    "demo_input": "samples/demo_input.npy",
+    "demo_expected": "samples/demo_expected.npy",
+    "eval_inputs": "samples/eval_inputs.npy",
+    "eval_expected": "samples/eval_expected.npy"
+  },
+  "preprocessing": {
+    "where": "host (PC / server); the board has no camera",
+    "steps": "PIL image.resize((96, 96)) on the whole image -> convert('L') -> x = pixel / 127.5 - 1 -> q = clip(round(x / scale) + zero_point)",
+    "input_scale": 0.007843137718737125,
+    "input_zero_point": -1,
+    "source": "original conversion script (training_a_model.md representative_dataset_gen)",
+    "script": "pc/models/person_detection/preprocess.py",
+    "pillow": "12.2.0"
+  },
+  "source": {
+    "url": "https://github.com/tensorflow/tflite-micro/blob/22c2469a233981012ac16ad849f59c7105655aa9/tensorflow/lite/micro/models/person_detect.tflite",
+    "commit": "22c2469a233981012ac16ad849f59c7105655aa9",
+    "sha256": "808cfdfc0cf3a6fa6f6fa26bfa379ea97c16d5db7334637766e39c3408502e9d",
+    "license": "Apache-2.0 (Copyright The TensorFlow Authors)",
+    "architecture": "MobileNet v1, depth multiplier 0.25, grayscale 96x96",
+    "reported_accuracy": "about 84% (training_a_model.md, fully trained float model on VWW val after 1M steps)",
+    "prepare": "pc/models/person_detection/prepare.py"
+  },
+  "dataset": {
+    "name": "Visual Wake Words (from COCO 2014), val split = COCO minival (8,059 images)",
+    "vww_paper": "A. Chowdhery et al. Visual Wake Words Dataset. arXiv:1906.05721, 2019.",
+    "coco": "T.-Y. Lin et al. Microsoft COCO: Common Objects in Context. ECCV 2014.",
+    "annotations": "http://images.cocodataset.org/annotations/annotations_trainval2014.zip (sha256 031296bb...b009), license CC BY 4.0",
+    "minival_ids": "tensorflow/models 930a6f98 research/object_detection/data/mscoco_minival_ids.txt",
+    "label_rule": "person if a person box covers more than 0.5% of the image area",
+    "image_license_filter": "package samples only from COCO license ids 4 (CC BY 2.0), 5 (CC BY-SA 2.0), 7 (no known copyright restrictions), 8 (US Government Work); NonCommercial (1-3) and NoDerivs (6) excluded. List: image_licenses.csv",
+    "notes": "package samples and test_data.npz are resized grayscale derivatives of those images; CC BY / CC BY-SA attribution via image_licenses.csv"
+  },
+  "host": {
+    "vww_val_images": 2000,
+    "int8_accuracy_resize": 0.776,
+    "int8_accuracy_center_crop": 0.7835,
+    "recall_resize": {
+      "no_person": 0.7879,
+      "person": 0.7624
+    },
+    "confusion_resize": [
+      [
+        843,
+        227
+      ],
+      [
+        221,
+        709
+      ]
+    ],
+    "int8_reference": "TFLM interpreter (pip tflite-micro)",
+    "arena_bytes_estimate": 85264,
+    "check_tool": "tflite-micro (pip, TFLM reference kernels, x86_64)",
+    "eval_samples": 60,
+    "eval_accuracy_int8": 0.8667
+  },
+  "board": {
+    "measured_at": "2026-10-06",
+    "firmware": "tflm_runtime b2a7e8c",
+    "cpu_freq_mhz": 240,
+    "latency_us": {
+      "bench_avg": 456654.4,
+      "bench_min": 456638,
+      "bench_max": 456667,
+      "bench_iterations": 5,
+      "eval_avg": 456703.9,
+      "stream_avg": 456740.6,
+      "demo_single": 456823
+    },
+    "arena_used_bytes": 82300,
+    "arena_alloc_bytes": 154624,
+    "max_arena_bytes": 155648,
+    "eval_samples": 60,
+    "eval_accuracy": 0.8667,
+    "eval_wall_ms": 27597,
+    "stream_test": {
+      "samples": 60,
+      "accuracy": 0.8667,
+      "baud": 921600,
+      "wall_s": 37.172,
+      "transport_retries": 0,
+      "baud_115200_wall_s_per_sample": 1.28
+    },
+    "responsiveness": {
+      "m_requests": 25,
+      "m_answered": 25,
+      "m_ms_median": 93,
+      "m_ms_max": 500,
+      "metrics_interval_s": [
+        5.48,
+        5.6,
+        5.48
+      ],
+      "metrics_iterations": 1
+    },
+    "heap_free_loaded": 132616,
+    "stack_free": 7920
+  },
+  "input": {
+    "shape": [
+      1,
+      96,
+      96,
+      1
+    ],
+    "dtype": "int8",
+    "scale": 0.007843137718737125,
+    "zero_point": -1,
+    "bytes": 9216
+  },
+  "output": {
+    "shape": [
+      1,
+      2
+    ],
+    "dtype": "int8",
+    "scale": 0.00390625,
+    "zero_point": -128,
+    "bytes": 2
+  },
+  "ops": [
+    "AVERAGE_POOL_2D",
+    "CONV_2D",
+    "DEPTHWISE_CONV_2D",
+    "RESHAPE",
+    "SOFTMAX"
+  ],
+  "package": {
+    "size_bytes": 863264,
+    "checksum": "0xe016d4ba",
+    "sha256": "7df0a7dab4d4f9d231ca14daea401a7ace7030f29e5803149af949f5dbae3b06",
+    "tflite_bytes": 300568,
+    "arena_bytes": 0,
+    "eval_samples": 60,
+    "demo": true
+  }
+}

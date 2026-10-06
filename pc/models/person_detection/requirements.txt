@@ -1,0 +1,6 @@
+# models/person_detection_int8 scripts.
+# prepare.py: Python 3.10+ standard library only.
+# evaluate.py: tflite-micro (Linux x86_64, WSL on Windows), numpy, Pillow (results recorded with 12.2.0).
+tflite-micro
+numpy
+pillow==12.2.0
