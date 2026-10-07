@@ -74,7 +74,9 @@ def measure(port, esptool_python, manifest_path: Path, dry_run: bool):
     if not dry_run:
         if old:
             m.setdefault("board_history", []).append(old)
-        m["board"] = {**old, **board}  # keep fields this script does not measure (stream tests ...)
+        # Only values measured with this firmware; the previous record (streaming tests and
+        # other one-off measurements included) stays in board_history.
+        m["board"] = board
         manifest_path.write_text(json.dumps(m, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 

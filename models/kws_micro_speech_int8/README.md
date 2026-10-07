@@ -105,6 +105,9 @@ square root → spectral subtraction → PCAN → log)를 **그대로** TFLM 인
 참고: 실시간 키워드 인식은 20 ms마다 새 프레임이 들어오므로, 보드에서 특징 추출까지 하려면 분류(13 ms) + 전처리 1프레임이
 20 ms 안에 들어와야 한다. 전처리 모델의 보드 시간은 측정하지 않았다 (Signal op은 tflm_runtime에 등록되어 있지 않음, 향후 과제).
 
+
+> **재측정 (tflm_runtime 58964e0, 플래시 QIO 80 MHz, 2026-10-07):** `b` 평균 12.25 ms (이전 b2a7e8c 12.97 ms). 정확도·아레나는 같다. 최신 값은 `manifest.json`의 `board`, 이전 값은 `board_history`.
+
 ## 다시 만들기
 
 ```powershell
