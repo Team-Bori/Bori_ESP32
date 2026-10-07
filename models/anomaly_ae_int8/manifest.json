@@ -1,0 +1,99 @@
+{
+  "model_id": "anomaly_ae_int8",
+  "name": "Anomalous sound detection autoencoder (fan, int8)",
+  "description": "기계(팬) 소리 10초 클립의 이상 여부 판정. DCASE 2023 Task 2 베이스라인 구조의 오토인코더로, 보드가 클립의 log-mel 벡터 32개를 재구성한 오차(MSE)를 이상 점수로 낸다. 비상업 데이터(CC BY-NC-SA 4.0) 사용.",
+  "task": "binary_score",
+  "firmware": "tflm_runtime",
+  "package_format": "BTF1",
+  "files": {
+    "tflite": "model.tflite",
+    "package": "default_model.bin"
+  },
+  "build": {
+    "arena_bytes": 0,
+    "labels": [
+      "normal",
+      "anomaly"
+    ],
+    "task_param": 0.100437,
+    "demo_input": "samples/demo_input.npy",
+    "demo_expected": "samples/demo_expected.npy",
+    "eval_inputs": "samples/eval_inputs.npy",
+    "eval_expected": "samples/eval_expected.npy"
+  },
+  "preprocessing": {
+    "where": "host (PC / server); the board has no microphone",
+    "audio": "16 kHz mono, 10 s clip",
+    "logmel": "librosa.feature.melspectrogram(n_fft=1024, hop_length=512, n_mels=128, power=2.0), 10*log10(mel + eps)",
+    "vectors": "5 consecutive frames concatenated -> 640 dims; 309 vectors per 10 s clip",
+    "board_input": "32 evenly spaced vectors (np.linspace(0, 308, 32).round()) -> standardized with the training mean/std -> int8",
+    "normalization": "per-dimension mean/std: models/anomaly_ae_int8/train_report.json (normalization)",
+    "input_scale": 0.0400221087038517,
+    "input_zero_point": -7,
+    "score": "model output = mean((x - AE(x))^2) over the K x 640 standardized values (dequantized)",
+    "decision": "anomaly if score >= task_param (gamma fit (floc=0) on the float scores of 1000 normal training clips (K vectors), 90% point)",
+    "script": "pc/models/anomaly_ae/train.py"
+  },
+  "source": {
+    "model": "trained in this repository; architecture of the DCASE 2023 Task 2 autoencoder baseline (640-128x4-8-128x4-640, BatchNorm + ReLU)",
+    "baseline": "https://dcase.community/challenge2023/task-first-shot-unsupervised-anomalous-sound-detection-for-machine-condition-monitoring",
+    "train": "pc/models/anomaly_ae/train.py",
+    "license": "repository license (model weights); see dataset for the samples"
+  },
+  "dataset": {
+    "name": "DCASE 2023 Challenge Task 2 Development Dataset, machine type fan (MIMII DG)",
+    "url": "https://zenodo.org/records/7882613",
+    "doi": "10.5281/zenodo.7882613",
+    "version": "3.0",
+    "file": "dev_fan.zip (md5 9348591e96fb0ad499a1e33b082562fc)",
+    "license": "CC BY-NC-SA 4.0 (dataset 'Condition of use', Hitachi, Ltd. and NTT Corporation). NOTE: Zenodo metadata says CC BY 4.0; the dataset's own text says CC BY-NC-SA 4.0, which we follow",
+    "commercial_use": false,
+    "citation": [
+      "N. Harada, D. Niizumi, Y. Ohishi, D. Takeuchi, M. Yasuda. First-shot anomaly detection for machine condition monitoring: A domain generalization baseline. arXiv:2303.00455, 2023.",
+      "K. Dohi, T. Nishida, H. Purohit, R. Tanabe, T. Endo, M. Yamamoto, Y. Nikaido, Y. Kawaguchi. MIMII DG: sound dataset for malfunctioning industrial machine investigation and inspection for domain generalization task. DCASE 2022 Workshop, 31-35.",
+      "N. Harada, D. Niizumi, D. Takeuchi, Y. Ohishi, M. Yasuda, S. Saito. ToyADMOS2: another dataset of miniature-machine operating sounds for anomalous sound detection under domain shift conditions. DCASE 2021 Workshop, 1-5."
+    ],
+    "notes": "package eval/demo samples and test_data.npz are features of these clips: derived data under CC BY-NC-SA 4.0 (non-commercial, share-alike)"
+  },
+  "host": {
+    "arena_bytes_estimate": 78256,
+    "check_tool": "tflite-micro (pip, TFLM reference kernels, x86_64)",
+    "eval_samples": 48,
+    "eval_accuracy_int8": 0.625
+  },
+  "board": {},
+  "input": {
+    "shape": [
+      32,
+      640
+    ],
+    "dtype": "int8",
+    "scale": 0.0400221087038517,
+    "zero_point": -7,
+    "bytes": 20480
+  },
+  "output": {
+    "shape": [
+      1,
+      1
+    ],
+    "dtype": "int8",
+    "scale": 0.0021881298162043095,
+    "zero_point": -128,
+    "bytes": 1
+  },
+  "ops": [
+    "FULLY_CONNECTED",
+    "SQUARED_DIFFERENCE",
+    "MEAN"
+  ],
+  "package": {
+    "size_bytes": 1323164,
+    "checksum": "0x3d201271",
+    "sha256": "0cfcdf19cdfdb49a603551d1582fb12685d8248068a9c7963e582eb5fc5a3532",
+    "tflite_bytes": 319176,
+    "arena_bytes": 0,
+    "eval_samples": 48,
+    "demo": true
+  }
+}

@@ -1,0 +1,142 @@
+{
+  "machine": "fan",
+  "k": 32,
+  "vectors_per_clip": 309,
+  "epochs": 100,
+  "final_loss": 0.08599,
+  "final_val_loss": 0.09449,
+  "float_all_vectors": {
+    "auc_source": 0.7966,
+    "auc_target": 0.2838,
+    "pauc": 0.5374
+  },
+  "float_k32": {
+    "auc_source": 0.7976,
+    "auc_target": 0.2842,
+    "pauc": 0.5374
+  },
+  "int8_k32": {
+    "auc_source": 0.7933,
+    "auc_target": 0.284,
+    "pauc": 0.5371
+  },
+  "threshold": {
+    "method": "gamma fit (floc=0) on the float scores of 1000 normal training clips (K vectors), 90% point",
+    "value": 0.100437,
+    "gamma": [
+      79.84954907227265,
+      0.0,
+      0.0010977422768483633
+    ],
+    "train_clips_above": 0.02
+  },
+  "int8_decision": {
+    "source": {
+      "accuracy": 0.61,
+      "normal_ok": 0.62,
+      "anomaly_found": 0.6
+    },
+    "target": {
+      "accuracy": 0.5,
+      "normal_ok": 0.0,
+      "anomaly_found": 1.0
+    },
+    "all": 0.555
+  },
+  "int8_score_percentiles_0_10_50_90_100": {
+    "train_normal": [
+      0.0722,
+      0.0744,
+      0.0875,
+      0.0941,
+      0.2188
+    ],
+    "test_normal": [
+      0.0897,
+      0.0941,
+      0.1324,
+      0.2365,
+      0.2582
+    ],
+    "test_anomaly": [
+      0.0788,
+      0.0897,
+      0.1838,
+      0.2755,
+      0.3807
+    ],
+    "distinct_train_values": 24
+  },
+  "eval_samples": 48,
+  "eval_names": [
+    "section_00_source_test_normal_0000_m-n_W.wav",
+    "section_00_source_test_normal_0004_m-n_W.wav",
+    "section_00_source_test_normal_0009_m-n_W.wav",
+    "section_00_source_test_normal_0013_m-n_W.wav",
+    "section_00_source_test_normal_0018_m-n_X.wav",
+    "section_00_source_test_normal_0022_m-n_W.wav",
+    "section_00_source_test_normal_0027_m-n_X.wav",
+    "section_00_source_test_normal_0031_m-n_X.wav",
+    "section_00_source_test_normal_0036_m-n_X.wav",
+    "section_00_source_test_normal_0040_m-n_W.wav",
+    "section_00_source_test_normal_0045_m-n_W.wav",
+    "section_00_source_test_normal_0049_m-n_X.wav",
+    "section_00_source_test_anomaly_0000_m-n_X.wav",
+    "section_00_source_test_anomaly_0004_m-n_W.wav",
+    "section_00_source_test_anomaly_0009_m-n_W.wav",
+    "section_00_source_test_anomaly_0013_m-n_X.wav",
+    "section_00_source_test_anomaly_0018_m-n_W.wav",
+    "section_00_source_test_anomaly_0022_m-n_W.wav",
+    "section_00_source_test_anomaly_0027_m-n_W.wav",
+    "section_00_source_test_anomaly_0031_m-n_X.wav",
+    "section_00_source_test_anomaly_0036_m-n_W.wav",
+    "section_00_source_test_anomaly_0040_m-n_X.wav",
+    "section_00_source_test_anomaly_0045_m-n_W.wav",
+    "section_00_source_test_anomaly_0049_m-n_W.wav",
+    "section_00_target_test_normal_0000_m-n_Y.wav",
+    "section_00_target_test_normal_0004_m-n_Y.wav",
+    "section_00_target_test_normal_0009_m-n_Y.wav",
+    "section_00_target_test_normal_0013_m-n_Z.wav",
+    "section_00_target_test_normal_0018_m-n_Y.wav",
+    "section_00_target_test_normal_0022_m-n_Y.wav",
+    "section_00_target_test_normal_0027_m-n_Y.wav",
+    "section_00_target_test_normal_0031_m-n_Z.wav",
+    "section_00_target_test_normal_0036_m-n_Z.wav",
+    "section_00_target_test_normal_0040_m-n_Y.wav",
+    "section_00_target_test_normal_0045_m-n_Z.wav",
+    "section_00_target_test_normal_0049_m-n_Y.wav",
+    "section_00_target_test_anomaly_0000_m-n_Z.wav",
+    "section_00_target_test_anomaly_0004_m-n_Z.wav",
+    "section_00_target_test_anomaly_0009_m-n_Z.wav",
+    "section_00_target_test_anomaly_0013_m-n_Y.wav",
+    "section_00_target_test_anomaly_0018_m-n_Z.wav",
+    "section_00_target_test_anomaly_0022_m-n_Z.wav",
+    "section_00_target_test_anomaly_0027_m-n_Y.wav",
+    "section_00_target_test_anomaly_0031_m-n_Y.wav",
+    "section_00_target_test_anomaly_0036_m-n_Y.wav",
+    "section_00_target_test_anomaly_0040_m-n_Z.wav",
+    "section_00_target_test_anomaly_0045_m-n_Z.wav",
+    "section_00_target_test_anomaly_0049_m-n_Z.wav"
+  ],
+  "eval_int8_accuracy": 0.625,
+  "demo": "section_00_source_test_anomaly_0021_m-n_W.wav",
+  "demo_score": 0.22975,
+  "normalization": {
+    "mean": -30.933668,
+    "std": 9.494835,
+    "formula": "x_norm = (logmel_dB - mean) / std (one global value for all 640 dims)"
+  },
+  "input_quantization": {
+    "scale": 0.0400221087038517,
+    "zero_point": -7
+  },
+  "output_quantization": {
+    "scale": 0.0021881298162043095,
+    "zero_point": -128
+  },
+  "tflite_bytes": 319176,
+  "params": 269992,
+  "tensorflow": "2.21.0",
+  "numpy": "2.2.6",
+  "python": "3.10.11"
+}
