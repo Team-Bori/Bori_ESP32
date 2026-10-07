@@ -62,9 +62,79 @@
         "arena_bytes_estimate": 78256,
         "check_tool": "tflite-micro (pip, TFLM reference kernels, x86_64)",
         "eval_samples": 48,
-        "eval_accuracy_int8": 0.625
+        "eval_accuracy_int8": 0.625,
+        "test_clips": 200,
+        "float_all_vectors": {
+          "auc_source": 0.7966,
+          "auc_target": 0.2838,
+          "pauc": 0.5374
+        },
+        "float_k32": {
+          "auc_source": 0.7976,
+          "auc_target": 0.2842,
+          "pauc": 0.5374
+        },
+        "int8_k32": {
+          "auc_source": 0.7933,
+          "auc_target": 0.284,
+          "pauc": 0.5371
+        },
+        "int8_decision": {
+          "source": {
+            "accuracy": 0.61,
+            "normal_ok": 0.62,
+            "anomaly_found": 0.6
+          },
+          "target": {
+            "accuracy": 0.5,
+            "normal_ok": 0.0,
+            "anomaly_found": 1.0
+          },
+          "all": 0.555
+        },
+        "dcase2023_baseline_fan": {
+          "auc_source": 0.8019,
+          "auc_target": 0.3618,
+          "pauc": 0.5904
+        },
+        "metric_definition": "DCASE 2023: AUC per domain = normals of that domain vs all anomalies; pAUC p=0.1 over all clips, sklearn max_fpr (McClish)"
       },
-      "board": {},
+      "board": {
+        "measured_at": "2026-10-07",
+        "firmware": "tflm_runtime 58964e0",
+        "cpu_freq_mhz": 240,
+        "latency_us": {
+          "bench_avg": 685344.7,
+          "bench_min": 685343,
+          "bench_max": 685347,
+          "bench_iterations": 3,
+          "eval_avg": 685306.4,
+          "demo_single": 685377
+        },
+        "arena_used_bytes": 76684,
+        "arena_alloc_bytes": 154624,
+        "max_arena_bytes": 155648,
+        "eval_samples": 48,
+        "eval_accuracy": 0.625,
+        "eval_wall_ms": 33124,
+        "stream_test": {
+          "samples": 48,
+          "accuracy": 0.625,
+          "baud": 921600,
+          "wall_s": 43.781,
+          "transport_retries": 0
+        },
+        "full_test_stream": {
+          "clips": 200,
+          "auc_source": 0.7928,
+          "auc_target": 0.284,
+          "pauc": 0.5368,
+          "wall_s": 182.2,
+          "invoke_errors": 0
+        },
+        "demo_score": 0.229754,
+        "heap_free_loaded": 123932
+      },
       "package_path": "models/anomaly_ae_int8/default_model.bin"
     },
     {
