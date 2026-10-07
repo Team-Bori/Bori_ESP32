@@ -1,0 +1,3 @@
+# models/mlperf_kws_dscnn_int8 (features.py / evaluate.py need TensorFlow for tf.signal)
+tensorflow>=2.16
+numpy
