@@ -2,6 +2,142 @@
   "version": 1,
   "models": [
     {
+      "model_id": "anomaly_ae_int8",
+      "name": "Anomalous sound detection autoencoder (fan, int8)",
+      "description": "기계(팬) 소리 10초 클립의 이상 여부 판정. DCASE 2023 Task 2 베이스라인 구조의 오토인코더로, 보드가 클립의 log-mel 벡터 32개를 재구성한 오차(MSE)를 이상 점수로 낸다. 비상업 데이터(CC BY-NC-SA 4.0) 사용.",
+      "task": "binary_score",
+      "firmware": "tflm_runtime",
+      "package_format": "BTF1",
+      "input": {
+        "shape": [
+          32,
+          640
+        ],
+        "dtype": "int8",
+        "scale": 0.0400221087038517,
+        "zero_point": -7,
+        "bytes": 20480
+      },
+      "output": {
+        "shape": [
+          1,
+          1
+        ],
+        "dtype": "int8",
+        "scale": 0.0021881298162043095,
+        "zero_point": -128,
+        "bytes": 1
+      },
+      "package": {
+        "size_bytes": 1323164,
+        "checksum": "0x3d201271",
+        "sha256": "0cfcdf19cdfdb49a603551d1582fb12685d8248068a9c7963e582eb5fc5a3532",
+        "tflite_bytes": 319176,
+        "arena_bytes": 0,
+        "eval_samples": 48,
+        "demo": true
+      },
+      "source": {
+        "model": "trained in this repository; architecture of the DCASE 2023 Task 2 autoencoder baseline (640-128x4-8-128x4-640, BatchNorm + ReLU)",
+        "baseline": "https://dcase.community/challenge2023/task-first-shot-unsupervised-anomalous-sound-detection-for-machine-condition-monitoring",
+        "train": "pc/models/anomaly_ae/train.py",
+        "license": "repository license (model weights); see dataset for the samples"
+      },
+      "dataset": {
+        "name": "DCASE 2023 Challenge Task 2 Development Dataset, machine type fan (MIMII DG)",
+        "url": "https://zenodo.org/records/7882613",
+        "doi": "10.5281/zenodo.7882613",
+        "version": "3.0",
+        "file": "dev_fan.zip (md5 9348591e96fb0ad499a1e33b082562fc)",
+        "license": "CC BY-NC-SA 4.0 (dataset 'Condition of use', Hitachi, Ltd. and NTT Corporation). NOTE: Zenodo metadata says CC BY 4.0; the dataset's own text says CC BY-NC-SA 4.0, which we follow",
+        "commercial_use": false,
+        "citation": [
+          "N. Harada, D. Niizumi, Y. Ohishi, D. Takeuchi, M. Yasuda. First-shot anomaly detection for machine condition monitoring: A domain generalization baseline. arXiv:2303.00455, 2023.",
+          "K. Dohi, T. Nishida, H. Purohit, R. Tanabe, T. Endo, M. Yamamoto, Y. Nikaido, Y. Kawaguchi. MIMII DG: sound dataset for malfunctioning industrial machine investigation and inspection for domain generalization task. DCASE 2022 Workshop, 31-35.",
+          "N. Harada, D. Niizumi, D. Takeuchi, Y. Ohishi, M. Yasuda, S. Saito. ToyADMOS2: another dataset of miniature-machine operating sounds for anomalous sound detection under domain shift conditions. DCASE 2021 Workshop, 1-5."
+        ],
+        "notes": "package eval/demo samples and test_data.npz are features of these clips: derived data under CC BY-NC-SA 4.0 (non-commercial, share-alike)"
+      },
+      "host": {
+        "arena_bytes_estimate": 78256,
+        "check_tool": "tflite-micro (pip, TFLM reference kernels, x86_64)",
+        "eval_samples": 48,
+        "eval_accuracy_int8": 0.625,
+        "test_clips": 200,
+        "float_all_vectors": {
+          "auc_source": 0.7966,
+          "auc_target": 0.2838,
+          "pauc": 0.5374
+        },
+        "float_k32": {
+          "auc_source": 0.7976,
+          "auc_target": 0.2842,
+          "pauc": 0.5374
+        },
+        "int8_k32": {
+          "auc_source": 0.7933,
+          "auc_target": 0.284,
+          "pauc": 0.5371
+        },
+        "int8_decision": {
+          "source": {
+            "accuracy": 0.61,
+            "normal_ok": 0.62,
+            "anomaly_found": 0.6
+          },
+          "target": {
+            "accuracy": 0.5,
+            "normal_ok": 0.0,
+            "anomaly_found": 1.0
+          },
+          "all": 0.555
+        },
+        "dcase2023_baseline_fan": {
+          "auc_source": 0.8019,
+          "auc_target": 0.3618,
+          "pauc": 0.5904
+        },
+        "metric_definition": "DCASE 2023: AUC per domain = normals of that domain vs all anomalies; pAUC p=0.1 over all clips, sklearn max_fpr (McClish)"
+      },
+      "board": {
+        "measured_at": "2026-10-07",
+        "firmware": "tflm_runtime 58964e0",
+        "cpu_freq_mhz": 240,
+        "latency_us": {
+          "bench_avg": 685344.7,
+          "bench_min": 685343,
+          "bench_max": 685347,
+          "bench_iterations": 3,
+          "eval_avg": 685306.4,
+          "demo_single": 685377
+        },
+        "arena_used_bytes": 76684,
+        "arena_alloc_bytes": 154624,
+        "max_arena_bytes": 155648,
+        "eval_samples": 48,
+        "eval_accuracy": 0.625,
+        "eval_wall_ms": 33124,
+        "stream_test": {
+          "samples": 48,
+          "accuracy": 0.625,
+          "baud": 921600,
+          "wall_s": 43.781,
+          "transport_retries": 0
+        },
+        "full_test_stream": {
+          "clips": 200,
+          "auc_source": 0.7928,
+          "auc_target": 0.284,
+          "pauc": 0.5368,
+          "wall_s": 182.2,
+          "invoke_errors": 0
+        },
+        "demo_score": 0.229754,
+        "heap_free_loaded": 123932
+      },
+      "package_path": "models/anomaly_ae_int8/default_model.bin"
+    },
+    {
       "model_id": "cnn_mnist_int8",
       "name": "MNIST small CNN (int8)",
       "description": "28x28 흑백 손글씨 숫자(0~9) 분류 소형 CNN. 이미지 입력 + 합성곱 구조의 대표 예제이자 사용자 모델 업로드 템플릿.",

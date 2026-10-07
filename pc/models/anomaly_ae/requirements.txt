@@ -1,0 +1,6 @@
+# models/anomaly_ae_int8 (pc/models/anomaly_ae/train.py)
+tensorflow>=2.16
+librosa==0.11.0
+scipy
+scikit-learn
+numpy
