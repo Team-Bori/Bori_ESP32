@@ -59,6 +59,9 @@ TensorFlow Lite Micro 공식 예제 **hello_world**의 int8 모델(사인파 회
 스트리밍·단발 추론이 `b`보다 느린 것은 이 모델이 매우 작아(53 µs) 매번 플래시 캐시 미스 비용이 그대로 드러나기 때문이다
 (샘플을 받는 동안 UART 코드가 캐시를 차지함). `b`는 같은 입력을 연속 실행한 warm 값이다.
 
+
+> **재측정 (tflm_runtime 58964e0, 플래시 QIO 80 MHz, 2026-10-07):** `b` 평균 41.7 µs (이전 b2a7e8c 41.7 µs). 정확도·아레나는 같다. 최신 값은 `manifest.json`의 `board`, 이전 값은 `board_history`.
+
 ## 다시 만들기
 
 ```powershell

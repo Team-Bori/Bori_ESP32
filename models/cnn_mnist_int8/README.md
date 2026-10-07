@@ -69,6 +69,9 @@ SHAPE/STRIDED_SLICE/PACK은 Keras `Flatten`이 만드는 동적 reshape다.
 1 MAC당 약 27 사이클로, 채널 수가 작은 층에서 ESP-NN generic 커널(ESP32는 S3의 SIMD 없음)의
 층별 고정 비용이 큰 것으로 추정한다. 펌웨어를 고치지 않는 범위라 층별 프로파일링은 하지 않았다.
 
+
+> **재측정 (tflm_runtime 58964e0, 플래시 QIO 80 MHz, 2026-10-07):** `b` 평균 21.36 ms (이전 b2a7e8c 21.63 ms). 정확도·아레나는 같다. 최신 값은 `manifest.json`의 `board`, 이전 값은 `board_history`.
+
 ## 다시 만들기
 
 ```powershell

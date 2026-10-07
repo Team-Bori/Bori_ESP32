@@ -3,6 +3,13 @@ CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
 CONFIG_PARTITION_TABLE_OFFSET=0x8000
 CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
 
+# Flash QIO @ 80 MHz (was DIO @ 40 MHz): model weights are read from flash through the
+# cache on every inference, so the flash bus speed shows up directly in large models
+# (person_detection). The image header stays "dio"; the bootloader switches the chip to QIO
+# (XTX 0x0B4016 on our boards uses the default QE bit) and falls back to DIO if it cannot.
+CONFIG_ESPTOOLPY_FLASHMODE_QIO=y
+CONFIG_ESPTOOLPY_FLASHFREQ_80M=y
+
 # 240 MHz: inference latency is the main metric of this service and the boards are
 # USB powered, so power saving does not matter. (mlp_esp32 stays at 160 MHz;
 # info.board.cpu_freq_mhz reports the clock with every measurement.)

@@ -25,9 +25,11 @@ v1 필드는 지우거나 의미를 바꾸지 않았고, v1 클라이언트(`m`/
 | `i` | `inference` | 데모 입력으로 1회 추론. 패키지에 데모가 없으면 0(양자화한 0.0) 입력 |
 | `b` | `bench` | 시간 예산 벤치마크 (최소 1회, 약 2초, 최대 1000회) |
 | `a` | `eval` | **v2 신규.** 패키지의 평가 샘플 전체 추론 → 정확도·지연 |
+| `l` | `labels` | **v2 신규 (b2a7e8c 이후 빌드).** 로드된 모델의 레이블 목록 (`info`에서 빠진 경우용) |
 | `p` | `periodic` | 주기 보고(`metrics`) 켜기/끄기 토글. 부팅 시 켜짐 |
 | 그 외 출력 가능한 ASCII | `error` (`unknown_command`) | |
 | 공백·제어 문자·0x7F 이상 | 응답 없음 | (0xA5는 프레임 시작) |
+| 터미널 이스케이프 시퀀스 (`ESC [ …`, `ESC O …`: 방향키 등) | 응답 없음 | 시퀀스 전체를 버린다 (b2a7e8c 이후 빌드) |
 
 명령은 순서대로 하나씩 처리된다. 실행 중에 들어온 바이트는 수신 버퍼(4KB)에 쌓였다가 다음에 처리된다.
 
@@ -42,7 +44,10 @@ v1 필드는 지우거나 의미를 바꾸지 않았고, v1 클라이언트(`m`/
 
 - 지연 시간은 `Invoke()` 시간만 잰다 (입력 복사·출력 해석 제외).
 - 0.5초마다 1틱 쉬어 태스크 워치독이 걸리지 않게 한다 (쉬는 시간은 측정에 포함되지 않음).
-- 따라서 명령 응답이 막히는 최대 시간은 대략 "주기 보고 1회(0.2초 + 1회 추론 시간)"다.
+- **주기 보고의 측정은 두 번째 코어의 별도 태스크가 한다** (b2a7e8c 이후 빌드). 측정 중에도 모델을 쓰지 않는
+  명령(`m`, `l`, `p`, 속도 변경·PING 프레임)은 바로 응답한다. 모델을 쓰는 명령(`i`, `b`, `a`, 테스트 샘플)은
+  진행 중인 측정(최대 1회 추론)이 끝난 뒤 실행된다. 출력은 항상 메인 태스크가 하므로 JSON 줄이 섞이지 않는다.
+  (b2a7e8c 빌드는 측정을 메인 루프에서 해 느린 모델에서 명령이 최대 1회 추론 시간만큼 늦었다: person_detection 0.5초.)
 
 ## 부팅 시 자동 출력
 
@@ -53,7 +58,7 @@ v1 필드는 지우거나 의미를 바꾸지 않았고, v1 클라이언트(`m`/
 
 ```json
 {"type":"boot","proto":2,"firmware_id":"tflm_runtime","fw_version":"66a9038","idf_version":"v5.3.1","reset_reason":"poweron","fault_reset":false}
-{"type":"ready","model_loaded":true,"commands":"i,b,m,p,a","frames":true,"periodic":true,"interval_ms":5000}
+{"type":"ready","model_loaded":true,"commands":"i,b,m,p,a,l","frames":true,"periodic":true,"interval_ms":5000}
 ```
 
 ## 메시지 형식
@@ -109,6 +114,14 @@ v1 필드는 지우거나 의미를 바꾸지 않았고, v1 클라이언트(`m`/
 ```
 v1 필드(`iterations`, `total_us`, `avg_us`, `fps`, `heap_before`, `heap_after`)는 그대로이고 `min_us`, `max_us`, `budget_ms`가 추가됐다.
 `iterations`는 고정값이 아니라 시간 예산으로 정해진다.
+
+### labels (`l`, 신규)
+
+```json
+{"type":"labels","count":10,"labels":["0","1","2","3","4","5","6","7","8","9"],"shown":10,"truncated":false}
+```
+- 1KB 안에 들어가는 만큼만 싣고, 다 못 실으면 `truncated:true`, `shown` = 실은 개수.
+- 모델이 없으면 `error` `model_not_loaded`.
 
 ### eval (`a`, 신규)
 

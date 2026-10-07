@@ -73,46 +73,42 @@
     "eval_accuracy_int8": 0.8667
   },
   "board": {
-    "measured_at": "2026-10-06",
-    "firmware": "tflm_runtime b2a7e8c",
+    "measured_at": "2026-10-07",
+    "firmware": "tflm_runtime 58964e0",
     "cpu_freq_mhz": 240,
     "latency_us": {
-      "bench_avg": 456654.4,
-      "bench_min": 456638,
-      "bench_max": 456667,
-      "bench_iterations": 5,
-      "eval_avg": 456703.9,
-      "stream_avg": 456740.6,
-      "demo_single": 456823
+      "bench_avg": 382652.2,
+      "bench_min": 382647,
+      "bench_max": 382661,
+      "bench_iterations": 6,
+      "eval_avg": 382641.2
     },
     "arena_used_bytes": 82300,
-    "arena_alloc_bytes": 154624,
     "max_arena_bytes": 155648,
     "eval_samples": 60,
     "eval_accuracy": 0.8667,
-    "eval_wall_ms": 27597,
+    "eval_wall_ms": 23097,
     "stream_test": {
       "samples": 60,
       "accuracy": 0.8667,
       "baud": 921600,
-      "wall_s": 37.172,
+      "wall_s": 29.234,
       "transport_retries": 0,
-      "baud_115200_wall_s_per_sample": 1.28
+      "avg_us": 382657.6
     },
     "responsiveness": {
-      "m_requests": 25,
-      "m_answered": 25,
-      "m_ms_median": 93,
-      "m_ms_max": 500,
+      "m_requests": 26,
+      "m_answered": 26,
+      "m_ms_median": 78,
+      "m_ms_max": 94,
       "metrics_interval_s": [
-        5.48,
-        5.6,
-        5.48
+        5.44,
+        5.44,
+        5.43
       ],
-      "metrics_iterations": 1
+      "metrics_avg_us_core1": 374913.0
     },
-    "heap_free_loaded": 132616,
-    "stack_free": 7920
+    "heap_free_loaded": 123932
   },
   "input": {
     "shape": [
@@ -151,5 +147,49 @@
     "arena_bytes": 0,
     "eval_samples": 60,
     "demo": true
-  }
+  },
+  "board_history": [
+    {
+      "measured_at": "2026-10-06",
+      "firmware": "tflm_runtime b2a7e8c",
+      "cpu_freq_mhz": 240,
+      "latency_us": {
+        "bench_avg": 456654.4,
+        "bench_min": 456638,
+        "bench_max": 456667,
+        "bench_iterations": 5,
+        "eval_avg": 456703.9,
+        "stream_avg": 456740.6,
+        "demo_single": 456823
+      },
+      "arena_used_bytes": 82300,
+      "arena_alloc_bytes": 154624,
+      "max_arena_bytes": 155648,
+      "eval_samples": 60,
+      "eval_accuracy": 0.8667,
+      "eval_wall_ms": 27597,
+      "stream_test": {
+        "samples": 60,
+        "accuracy": 0.8667,
+        "baud": 921600,
+        "wall_s": 37.172,
+        "transport_retries": 0,
+        "baud_115200_wall_s_per_sample": 1.28
+      },
+      "responsiveness": {
+        "m_requests": 25,
+        "m_answered": 25,
+        "m_ms_median": 93,
+        "m_ms_max": 500,
+        "metrics_interval_s": [
+          5.48,
+          5.6,
+          5.48
+        ],
+        "metrics_iterations": 1
+      },
+      "heap_free_loaded": 132616,
+      "stack_free": 7920
+    }
+  ]
 }
