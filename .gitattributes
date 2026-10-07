@@ -1,0 +1,9 @@
+# Never convert line endings in binary artifacts (models, packages, samples, firmware).
+# Git guesses "binary" only from NUL bytes; a small file without one would be corrupted by
+# core.autocrlf on Windows (seen with an EEMBC kws01 .bin file).
+*.bin    binary
+*.tflite binary
+*.npy    binary
+*.npz    binary
+*.h5     binary
+*.wav    binary
