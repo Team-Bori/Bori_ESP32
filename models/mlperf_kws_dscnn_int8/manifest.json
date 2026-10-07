@@ -1,0 +1,158 @@
+{
+  "model_id": "mlperf_kws_dscnn_int8",
+  "name": "MLPerf Tiny keyword spotting DS-CNN (int8)",
+  "description": "MLPerf Tiny 표준 벤치마크의 키워드 인식 참조 모델. 1초 음성의 MFCC(49×10)로 12개 범주(down, go, left, no, off, on, right, stop, up, yes, silence, unknown) 분류. 다른 MCU의 공개 MLPerf Tiny 결과와 비교용.",
+  "task": "classification",
+  "firmware": "tflm_runtime",
+  "package_format": "BTF1",
+  "files": {
+    "tflite": "model.tflite",
+    "package": "default_model.bin"
+  },
+  "build": {
+    "arena_bytes": 0,
+    "labels": [
+      "down",
+      "go",
+      "left",
+      "no",
+      "off",
+      "on",
+      "right",
+      "stop",
+      "up",
+      "yes",
+      "silence",
+      "unknown"
+    ],
+    "demo_input": "samples/demo_input.npy",
+    "demo_expected": "samples/demo_expected.npy",
+    "eval_inputs": "samples/eval_inputs.npy",
+    "eval_expected": "samples/eval_expected.npy"
+  },
+  "preprocessing": {
+    "where": "host (PC / server); the board has no microphone",
+    "audio": "16 kHz mono int16, up to 1 s (zero padded to 16,000 samples)",
+    "steps": "float / reduce_max(audio) -> tf.signal.stft(480, 320, Hann) -> |.| -> 40 mel bins 20-4000 Hz -> log(x + 1e-6) -> tf.signal.mfccs_from_log_mel_spectrograms -> first 10 -> [49, 10, 1]",
+    "quantization": "q = int8(trunc(x / 0.5847029 + 83)), truncation like the reference (clipped to -128..127)",
+    "reference": "mlcommons/tiny benchmark/training/keyword_spotting/get_dataset.py (mfcc), eval_quantized_model.py",
+    "verified": "EEMBC kws01 official inputs: 919/1000 byte-identical, 80 differ by +-1 at exact integer boundaries (float noise under truncation, TF version), 1 clip not in our test set; accuracy on the same 999 clips 90.29% (EEMBC inputs) vs 90.39% (ours)",
+    "script": "pc/models/mlperf_kws/features.py"
+  },
+  "source": {
+    "url": "https://github.com/mlcommons/tiny/tree/4addd0fa08d216e20637637874e084895f289da4/benchmark/training/keyword_spotting",
+    "file": "trained_models/kws_ref_model.tflite (unchanged)",
+    "commit": "4addd0fa08d216e20637637874e084895f289da4",
+    "sha256": "aeea436800704fce17b17292e4412630ad856e9d777c044c64ef748a880bd0ae",
+    "license": "Apache-2.0 (MLCommons)",
+    "reported_accuracy": "about 92% on the Speech Commands v2 test set (trained_models/README.md)",
+    "benchmark": "MLPerf Tiny keyword spotting (KWS), EEMBC runner dataset kws01",
+    "paper": "C. Banbury et al. MLPerf Tiny Benchmark. NeurIPS 2021 Datasets and Benchmarks (arXiv:2106.07597): reference DS-CNN 91.6% on the full test set, quality target 90% top-1, 38.6K parameters"
+  },
+  "dataset": {
+    "name": "Speech Commands v0.02 test set (12-class)",
+    "url": "https://storage.googleapis.com/download.tensorflow.org/data/speech_commands_test_set_v0.02.tar.gz",
+    "sha256": "cc2a00c1147c2254e9be3fa0f779d8c17421dc349b86366567a8edfa9acd51df",
+    "license": "CC BY 4.0",
+    "citation": "P. Warden. Speech Commands: A Dataset for Limited-Vocabulary Speech Recognition. arXiv:1804.03209, 2018.",
+    "notes": "package eval samples and test_data.npz are MFCC features of these clips (derived data, CC BY 4.0). EEMBC kws01 inputs were only used for verification, not redistributed"
+  },
+  "host": {
+    "test_clips": 4890,
+    "int8_accuracy": 0.9166,
+    "per_class_recall": {
+      "down": 0.8793,
+      "go": 0.8557,
+      "left": 0.9345,
+      "no": 0.8988,
+      "off": 0.9104,
+      "on": 0.8864,
+      "right": 0.9066,
+      "stop": 0.9246,
+      "up": 0.8965,
+      "yes": 0.9284,
+      "silence": 0.9877,
+      "unknown": 0.9877
+    },
+    "eembc_kws01": {
+      "inputs": 1000,
+      "int8_accuracy_eembc_inputs": 0.902,
+      "matched_clips": 999,
+      "not_in_our_test_set": 1,
+      "accuracy_on_matched_eembc_inputs": 0.9029,
+      "accuracy_on_our_features_same_clips": 0.9039,
+      "predictions_differing": 1
+    },
+    "int8_reference": "TF Lite interpreter",
+    "arena_bytes_estimate": 24256,
+    "check_tool": "tflite-micro (pip, TFLM reference kernels, x86_64)",
+    "eval_samples": 180,
+    "eval_accuracy_int8": 0.9222
+  },
+  "board": {
+    "measured_at": "2026-10-07",
+    "firmware": "tflm_runtime 58964e0",
+    "cpu_freq_mhz": 240,
+    "latency_us": {
+      "bench_avg": 153728.4,
+      "bench_min": 153718,
+      "bench_max": 153754,
+      "bench_iterations": 13,
+      "eval_avg": 153812.1,
+      "stream_avg": 154153.8,
+      "demo_single": 154243
+    },
+    "arena_used_bytes": 22780,
+    "max_arena_bytes": 155648,
+    "eval_samples": 180,
+    "eval_accuracy": 0.9222,
+    "eval_wall_ms": 27905,
+    "stream_test": {
+      "samples": 180,
+      "accuracy": 0.9222,
+      "baud": 921600,
+      "wall_s": 29.375,
+      "transport_retries": 0
+    },
+    "heap_free_loaded": 123932
+  },
+  "input": {
+    "shape": [
+      1,
+      49,
+      10,
+      1
+    ],
+    "dtype": "int8",
+    "scale": 0.5847029089927673,
+    "zero_point": 83,
+    "bytes": 490
+  },
+  "output": {
+    "shape": [
+      1,
+      12
+    ],
+    "dtype": "int8",
+    "scale": 0.00390625,
+    "zero_point": -128,
+    "bytes": 12
+  },
+  "ops": [
+    "CONV_2D",
+    "DEPTHWISE_CONV_2D",
+    "AVERAGE_POOL_2D",
+    "RESHAPE",
+    "FULLY_CONNECTED",
+    "SOFTMAX"
+  ],
+  "package": {
+    "size_bytes": 143668,
+    "checksum": "0x11ada3cc",
+    "sha256": "7792b32fbaa2df1a531a07f077df99164247a681e2421128b2c21948efe2c73b",
+    "tflite_bytes": 53936,
+    "arena_bytes": 0,
+    "eval_samples": 180,
+    "demo": true
+  }
+}

@@ -29,6 +29,7 @@
 | MNIST CNN (Conv 2층, 5k 파라미터, 19만 MAC) | 10.5 KB | 8.5 KB | 21.4 ms |
 | 동작 인식 1D CNN (128×9 입력) | 10.5 KB | 5.9 KB | 16.0 ms |
 | 키워드 인식 tiny_conv (49×40 입력) | 18.8 KB | 6.8 KB | 12.2 ms |
+| 키워드 인식 MLPerf Tiny DS-CNN (49×10 MFCC) | 52.7 KB | 22.2 KB | 153.7 ms |
 | 사람 감지 MobileNet v1 0.25 (96×96 흑백) | 293.5 KB | 80.4 KB | 382.7 ms |
 | 이상 탐지 오토인코더 (32×640 입력, Dense 10층) | 311.7 KB | 74.9 KB | 685.3 ms |
 
